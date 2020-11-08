@@ -13,6 +13,7 @@ namespace glr {
 class tex2Screen {
     public:
         tex2Screen();
+        void init();
 
         void addShader(std::string vertPath, std::string fragPath, std::string shaderName);
         void useShader(std::string shaderName);

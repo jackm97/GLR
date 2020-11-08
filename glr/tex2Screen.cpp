@@ -6,6 +6,11 @@ namespace glr {
 
 GLRENDER_INLINE tex2Screen::tex2Screen()
 {
+
+}
+
+GLRENDER_INLINE void tex2Screen::init()
+{
     std::string vCode =
     #include <glr/shaders/tex2Screen.vs>
     ;
