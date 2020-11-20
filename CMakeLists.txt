@@ -48,13 +48,13 @@ add_definitions(-DGLRENDER_STATIC)
 add_library(glr STATIC ${GLR_SOURCE_DIR}/shader.cpp
                        ${GLR_SOURCE_DIR}/texture.cpp
                        ${GLR_SOURCE_DIR}/sceneViewer.cpp
-                       ${GLR_SOURCE_DIR}/tex2Screen.cpp )
+                       ${GLR_SOURCE_DIR}/sceneViewer2D.cpp )
 
 set(JFS_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
                 ${GLR_SOURCE_DIR}/shader.h
                 ${GLR_SOURCE_DIR}/texture.h
                 ${GLR_SOURCE_DIR}/sceneViewer.h
-                ${GLR_SOURCE_DIR}/tex2Screen.h )
+                ${GLR_SOURCE_DIR}/sceneViewer2D.h )
 
 install(TARGETS glr DESTINATION ${INSTALL_PATH}/lib/glr)
 install(FILES ${JFS_HEADERS} DESTINATION ${INSTALL_PATH}/include/glr)
