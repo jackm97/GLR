@@ -87,6 +87,9 @@ GLRENDER_INLINE void sceneViewer2D::drawScene()
         if (shaders[s].name == "default"){shaderIdx = s; break;}
     }
     shaders[shaderIdx].use();
+
+    shaders[shaderIdx].setFloat("boundX", boundX);
+    shaders[shaderIdx].setFloat("boundY", boundY);
     
     int textureIdx;
     for (int t=0; t < textures.size(); t++)
