@@ -1,21 +1,21 @@
-#include <glr/tex2Screen.h>
+#include <glr/sceneViewer2D.h>
 
 #include <string>
 
 namespace glr {
 
-GLRENDER_INLINE tex2Screen::tex2Screen()
+GLRENDER_INLINE sceneViewer2D::sceneViewer2D()
 {
 
 }
 
-GLRENDER_INLINE void tex2Screen::init()
+GLRENDER_INLINE void sceneViewer2D::init()
 {
     std::string vCode =
-    #include <glr/shaders/tex2Screen.vs>
+    #include <glr/shaders/sceneViewer2D.vs>
     ;
     std::string fCode =
-    #include <glr/shaders/tex2Screen.fs>
+    #include <glr/shaders/sceneViewer2D.fs>
     ;
     
     shaderList.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
@@ -23,10 +23,10 @@ GLRENDER_INLINE void tex2Screen::init()
     // vertices
     float vertices[] = {
     // positions            // texture coords
-    1.0f,  1.0f, 0.0f,   1.0f, 1.0f,   // top right
-    1.0f, -1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,   // bottom left
-    -1.0f,  1.0f, 0.0f,   0.0f, 1.0f    // top left 
+    1.0f,  1.0f, 0.5f,   1.0f, 1.0f,   // top right
+    1.0f, -1.0f, 0.5f,   1.0f, 0.0f,   // bottom right
+    -1.0f, -1.0f, 0.5f,   0.0f, 0.0f,   // bottom left
+    -1.0f,  1.0f, 0.5f,   0.0f, 1.0f    // top left 
     };
     unsigned int indices[] = {
             0, 1, 3, // first triangle
@@ -53,12 +53,12 @@ GLRENDER_INLINE void tex2Screen::init()
     glEnableVertexAttribArray(1);
 }
 
-GLRENDER_INLINE void tex2Screen::addShader(std::string vertPath, std::string fragPath, std::string shaderName)
+GLRENDER_INLINE void sceneViewer2D::addShader(std::string vertPath, std::string fragPath, std::string shaderName)
 {
     shaderList.push_back( shader (fragPath.c_str(),vertPath.c_str(),shaderName.c_str()) );
 }
 
-GLRENDER_INLINE void tex2Screen::useShader(std::string shaderName)
+GLRENDER_INLINE void sceneViewer2D::useShader(std::string shaderName)
 {
     for (int s=0; s < shaderList.size(); s++)
     {
@@ -66,21 +66,38 @@ GLRENDER_INLINE void tex2Screen::useShader(std::string shaderName)
     }
 }
 
-GLRENDER_INLINE void tex2Screen::addTexture(std::string texturePath, std::string textureName)
+GLRENDER_INLINE void sceneViewer2D::addTexture(std::string texturePath, std::string textureName)
 {
+    for (int t=0; t < textureList.size(); t++)
+    {
+        if (textureList[t].name == textureName)
+        {
+            textureList[t].genNewTexture(texturePath);
+            return;
+        }
+    }
+    
     texture newTexture(texturePath, textureName);
     textureList.push_back( newTexture );
     newTexture.glRelease();
 }
 
-GLRENDER_INLINE void tex2Screen::addTexture(int width, int height, std::string textureName)
+GLRENDER_INLINE void sceneViewer2D::addTexture(int width, int height, std::string textureName)
 {
+    for (int t=0; t < textureList.size(); t++)
+    {
+        if (textureList[t].name == textureName)
+        {
+            textureList[t].genNewTexture(width, height);
+            return;
+        }
+    }
     texture newTexture(width,height,textureName);
     textureList.push_back( newTexture );
     newTexture.glRelease();
 }
 
-GLRENDER_INLINE void tex2Screen::uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data)
+GLRENDER_INLINE void sceneViewer2D::uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data)
 {
     for (int t=0; t < textureList.size(); t++)
     {
@@ -89,7 +106,7 @@ GLRENDER_INLINE void tex2Screen::uploadPix2Tex(std::string textureName, GLenum f
     }
 }
 
-GLRENDER_INLINE void tex2Screen::deleteTexture(std::string textureName)
+GLRENDER_INLINE void sceneViewer2D::deleteTexture(std::string textureName)
 {
     for (int t=0; t < textureList.size(); t++)
     {
@@ -97,7 +114,7 @@ GLRENDER_INLINE void tex2Screen::deleteTexture(std::string textureName)
     }
 }
 
-GLRENDER_INLINE void tex2Screen::draw()
+GLRENDER_INLINE void sceneViewer2D::draw()
 {
     shaderList[shaderIdx].use();
     for (int t=0; t < textureList.size(); t++)

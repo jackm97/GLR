@@ -10,9 +10,9 @@
 
 namespace glr {
 
-class tex2Screen {
+class sceneViewer2D {
     public:
-        tex2Screen();
+        sceneViewer2D();
         void init();
 
         void addShader(std::string vertPath, std::string fragPath, std::string shaderName);
@@ -36,7 +36,7 @@ class tex2Screen {
 } //namespace glr
 
 #ifndef GLRENDER_STATIC   
-    #include <glr/tex2Screen.cpp>
+    #include <glr/sceneViewer2D.cpp>
 #endif
 
 #endif
