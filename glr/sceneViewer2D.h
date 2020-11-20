@@ -2,6 +2,8 @@
 #define TEX2SCREEN_H
 #include "glr_inline.h"
 
+#include <glr/renderBase.h>
+
 #include <glr/shader.h>
 #include <glr/texture.h>
 
@@ -10,25 +12,16 @@
 
 namespace glr {
 
-class sceneViewer2D {
+class sceneViewer2D : public renderBase {
     public:
         sceneViewer2D();
-        void init();
 
-        void addShader(std::string vertPath, std::string fragPath, std::string shaderName);
-        void useShader(std::string shaderName);
+        void init(float boundX, float boundY);
 
-        void addTexture(std::string texturePath, std::string textureName);
-        void addTexture(int width, int height, std::string textureName);
-        void uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data);
-        void deleteTexture(std::string textureName);
-
-        void draw();
+        void drawScene();
 
     private:
-        unsigned int shaderIdx = 0;
-        std::vector<shader> shaderList;
-        std::vector<texture> textureList;
+        float boundX, boundY;
 
         unsigned int VBO, VAO, EBO;
 };

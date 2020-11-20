@@ -9,24 +9,50 @@ GLRENDER_INLINE sceneViewer2D::sceneViewer2D()
 
 }
 
-GLRENDER_INLINE void sceneViewer2D::init()
+GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
 {
-    std::string vCode =
-    #include <glr/shaders/sceneViewer2D.vs.h>
-    ;
-    std::string fCode =
-    #include <glr/shaders/sceneViewer2D.fs.h>
-    ;
-    
-    shaderList.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
+    this->boundX = boundX;
+    this->boundY = boundY;
+	
+    if (!isInit){
+		isInit = true;
+
+		shaders.reserve(MAX_SHADER_COUNT);
+		textures.reserve(MAX_TEXTURE_COUNT);
+
+		// assign an empty texture for shapes without textures
+		// used within the draw function to determine if
+		// a texture should be used in the fragment shader
+		if (!textureExist("empty"))
+		{	
+			texture emptyTexture("empty");
+			textures.push_back(emptyTexture);
+			emptyTexture.glRelease();
+		}
+
+        std::string vCode =
+        #include <glr/shaders/sceneViewer2D.vs.h>
+        ;
+        std::string fCode =
+        #include <glr/shaders/sceneViewer2D.fs.h>
+        ;
+        
+        shaders.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
+	}
+    else
+    {
+        glDeleteBuffers(1, (GLuint*) &EBO);
+        glDeleteBuffers(1, (GLuint*) &VBO);
+        glDeleteVertexArrays(1, (GLuint*) &VAO);
+    }
 
     // vertices
     float vertices[] = {
     // positions            // texture coords
-    1.0f,  1.0f, 0.5f,   1.0f, 1.0f,   // top right
-    1.0f, -1.0f, 0.5f,   1.0f, 0.0f,   // bottom right
-    -1.0f, -1.0f, 0.5f,   0.0f, 0.0f,   // bottom left
-    -1.0f,  1.0f, 0.5f,   0.0f, 1.0f    // top left 
+    1.0f/boundX,  1.0f/boundY, 0.5f,   1.0f, 1.0f,   // top right
+    1.0f/boundX, -1.0f/boundY, 0.5f,   1.0f, 0.0f,   // bottom right
+    -1.0f/boundX, -1.0f/boundY, 0.5f,   0.0f, 0.0f,   // bottom left
+    -1.0f/boundX,  1.0f/boundY, 0.5f,   0.0f, 1.0f    // top left 
     };
     unsigned int indices[] = {
             0, 1, 3, // first triangle
@@ -53,83 +79,26 @@ GLRENDER_INLINE void sceneViewer2D::init()
     glEnableVertexAttribArray(1);
 }
 
-GLRENDER_INLINE void sceneViewer2D::addShader(std::string vertPath, std::string fragPath, std::string shaderName)
+GLRENDER_INLINE void sceneViewer2D::drawScene()
 {
-    shaderList.push_back( shader (fragPath.c_str(),vertPath.c_str(),shaderName.c_str()) );
-}
-
-GLRENDER_INLINE void sceneViewer2D::useShader(std::string shaderName)
-{
-    for (int s=0; s < shaderList.size(); s++)
+    int shaderIdx;
+    for (int s=0; s < shaders.size(); s++)
     {
-        if (shaderList[s].name == shaderName){shaderIdx = s; break;}
+        if (shaders[s].name == "default"){shaderIdx = s; break;}
     }
-}
-
-GLRENDER_INLINE void sceneViewer2D::addTexture(std::string texturePath, std::string textureName)
-{
-    for (int t=0; t < textureList.size(); t++)
-    {
-        if (textureList[t].name == textureName)
-        {
-            textureList[t].genNewTexture(texturePath);
-            return;
-        }
-    }
+    shaders[shaderIdx].use();
     
-    texture newTexture(texturePath, textureName);
-    textureList.push_back( newTexture );
-    newTexture.glRelease();
-}
-
-GLRENDER_INLINE void sceneViewer2D::addTexture(int width, int height, std::string textureName)
-{
-    for (int t=0; t < textureList.size(); t++)
+    int textureIdx;
+    for (int t=0; t < textures.size(); t++)
     {
-        if (textureList[t].name == textureName)
-        {
-            textureList[t].genNewTexture(width, height);
-            return;
-        }
+        if (textures[t].name == "background"){textureIdx = t; break;}
     }
-    texture newTexture(width,height,textureName);
-    textureList.push_back( newTexture );
-    newTexture.glRelease();
-}
+    textures[textureIdx].bind();
 
-GLRENDER_INLINE void sceneViewer2D::uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data)
-{
-    for (int t=0; t < textureList.size(); t++)
-    {
-        if (textureList[t].name == textureName)
-            textureList[t].loadPixels(format, type, data);
-    }
-}
-
-GLRENDER_INLINE void sceneViewer2D::deleteTexture(std::string textureName)
-{
-    for (int t=0; t < textureList.size(); t++)
-    {
-        if (textureList[t].name == textureName){textureList.erase(textureList.begin() + t);}
-    }
-}
-
-GLRENDER_INLINE void sceneViewer2D::draw()
-{
-    shaderList[shaderIdx].use();
-    for (int t=0; t < textureList.size(); t++)
-    {
-        glActiveTexture(GL_TEXTURE0 + t);
-        textureList[t].bind();
-    }
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    for (int t=0; t < textureList.size(); t++)
-    {
-        glActiveTexture(GL_TEXTURE0 + t);
-        textureList[t].unbind();
-    }
-    glActiveTexture(GL_TEXTURE0);
+
+    textures[textureIdx].unbind();    
 }
 
 } // namespace glr

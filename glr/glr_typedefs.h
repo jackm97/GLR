@@ -11,7 +11,7 @@ namespace glr {
 
 class shader;
 class texture;
-class sceneViewer;
+class renderBase;
 
 
 class wavefrontObj
@@ -31,7 +31,7 @@ class wavefrontObj
 
         std::vector<glm::vec3> shapeCenters;
 
-        friend sceneViewer;
+        friend renderBase;
 
     private:
         std::vector<bool> noUVMap;
