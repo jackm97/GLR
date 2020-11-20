@@ -12,10 +12,10 @@ GLRENDER_INLINE sceneViewer2D::sceneViewer2D()
 GLRENDER_INLINE void sceneViewer2D::init()
 {
     std::string vCode =
-    #include <glr/shaders/sceneViewer2D.vs>
+    #include <glr/shaders/sceneViewer2D.vs.h>
     ;
     std::string fCode =
-    #include <glr/shaders/sceneViewer2D.fs>
+    #include <glr/shaders/sceneViewer2D.fs.h>
     ;
     
     shaderList.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );

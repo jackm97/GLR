@@ -11,6 +11,26 @@
 
 namespace glr {
 
+GLRENDER_INLINE void sceneViewer::init()
+{
+	if (isInit) return;
+
+	isInit = true;
+
+	shaders.reserve(MAX_SHADER_COUNT);
+	textures.reserve(MAX_TEXTURE_COUNT);
+
+	// assign an empty texture for shapes without textures
+	// used within the draw function to determine if
+	// a texture should be used in the fragment shader
+	if (!textureExist("empty"))
+	{	
+		texture emptyTexture("empty");
+		textures.push_back(emptyTexture);
+		emptyTexture.glRelease();
+	}
+}
+
 GLRENDER_INLINE void sceneViewer::addWavefront(std::string objPath, std::string baseDir, std::string name)
 {
 	wavefrontObj newObj;
@@ -48,6 +68,7 @@ GLRENDER_INLINE void sceneViewer::addWavefront(std::string objPath, std::string 
 
 GLRENDER_INLINE void sceneViewer::initGLBuffers(bool calcNormals, bool flipNormals)
 {
+	
     // gladLoadGL();
 	for (int obj = 0; obj < wavefrontObjList.size(); obj++)
 		initGLBuffers(wavefrontObjList[obj], calcNormals, flipNormals);
@@ -55,6 +76,7 @@ GLRENDER_INLINE void sceneViewer::initGLBuffers(bool calcNormals, bool flipNorma
 
 GLRENDER_INLINE void sceneViewer::initGLBuffers(std::string objName, bool calcNormals, bool flipNormals)
 {
+	
     // gladLoadGL();
 	for (int obj = 0; obj < wavefrontObjList.size(); obj++)
 	{
@@ -68,16 +90,6 @@ GLRENDER_INLINE void sceneViewer::initGLBuffers(std::string objName, bool calcNo
 GLRENDER_INLINE void sceneViewer::initGLBuffers(wavefrontObj &obj, bool calcNormals, bool flipNormals)
 {
 	if (obj.isLoadedIntoGL) return;
-
-	// assign an empty texture for shapes without textures
-	// used within the draw function to determine if
-	// a texture should be used in the fragment shader
-	if (!textureExist("empty"))
-	{	
-		texture emptyTexture("empty");
-		textures.push_back(emptyTexture);
-		emptyTexture.glRelease();
-	}
 
 	std::string baseDir = obj.baseDir;
 	std::vector<unsigned int> &VAOList = obj.VAOList;
@@ -226,6 +238,7 @@ PUBLIC SHADER STUFF
 */
 GLRENDER_INLINE void sceneViewer::addShader(std::string vertPath, std::string fragPath, std::string shaderName)
 {
+	if (shaders.size() > MAX_SHADER_COUNT) std::cerr << "Exceded Maximum Shader Count in SceneViewer" << std::endl;
 	if (shaderExist(shaderName)) return;
     shaders.push_back( shader( vertPath.c_str(), fragPath.c_str(), shaderName.c_str() ) );
 }
@@ -330,6 +343,8 @@ PUBLIC TEXTURE STUFF
 */
 GLRENDER_INLINE void sceneViewer::addtexture(std::string texturePath, std::string textureName)
 {
+	if (textures.size() > MAX_TEXTURE_COUNT) std::cerr << "Exceded Maximum Texture Count in SceneViewer" << std::endl;
+	
 	if (textureExist(textureName)) return;
 	texture newTexture( texturePath, textureName );
 	textures.push_back( newTexture );

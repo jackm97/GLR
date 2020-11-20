@@ -1,14 +1,14 @@
-"#version 330 core\n \
-out vec4 FragColor;\n \
-\n \
-in vec2 TexCoord;\n \
- \
-// texture samplers\n \
-uniform sampler2D texture1;\n \
-\n \
-vec4 colormap(float x);\n \
-\n \
-void main()\n \
-{\n \
-	FragColor = texture(texture1, TexCoord);\n \
-}"
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+// texture samplers
+uniform sampler2D texture1;
+
+vec4 colormap(float x);
+
+void main()
+{
+	FragColor = texture(texture1, TexCoord);
+}

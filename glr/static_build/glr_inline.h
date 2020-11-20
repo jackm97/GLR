@@ -8,3 +8,5 @@
 
 #  define GLRENDER_INLINE
 #  define GLRENDER_STATIC
+
+#include <glr/glr_typedefs.h>

@@ -51,6 +51,7 @@ add_library(glr STATIC ${GLR_SOURCE_DIR}/shader.cpp
                        ${GLR_SOURCE_DIR}/sceneViewer2D.cpp )
 
 set(JFS_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
+                ${GLR_SOURCE_DIR}/glr_typedefs.h
                 ${GLR_SOURCE_DIR}/shader.h
                 ${GLR_SOURCE_DIR}/texture.h
                 ${GLR_SOURCE_DIR}/sceneViewer.h

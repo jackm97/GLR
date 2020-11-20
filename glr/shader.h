@@ -10,6 +10,7 @@ typedef enum{
 	PATH_TO_CODE,
 	RAW_CODE
 } shaderLoadType;
+
 class shader
 {
 public:
