@@ -137,7 +137,7 @@ class sceneViewer
 
         void drawObj(wavefrontObj &obj);
 
-        void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, unsigned int shaderIdx);
+        void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr);
 
         glm::vec3 getShapeCenter(wavefrontObj &obj, unsigned int shapeIdx);
 };
@@ -155,26 +155,24 @@ class wavefrontObj
         std::vector<tinyobj::shape_t> shapes; // see tinyobj docs
         std::vector<tinyobj::material_t> materials; // see tinyobj docs
 
-        // This vector has same size as shapes
-        // and each entry is in index that points
-        // to a shader in shaders.
-        // shapes[i] will be rendered using
-        // shaders[shaderIndices[i]]
-        std::vector<int> shaderIndices;
-
-        // works similar to shaderIndices
-        std::vector<int> textureIndices;
-
         glm::mat4 modelMatrix{1.0f};
 
         std::vector<glm::vec3> shapeCenters;
-
-        bool isLoadedIntoGL = false;
 
         friend sceneViewer;
 
     private:
         std::vector<bool> noUVMap;
+
+        // This vector has same size as shapes
+        // and each entry is a pointer to a 
+        // glr::shader object
+        std::vector<shader*> shaderPtrs;
+
+        // works similar to shaderPtrs
+        std::vector<texture*> texturePtrs;
+
+        bool isLoadedIntoGL = false;
 };
 
 struct camera

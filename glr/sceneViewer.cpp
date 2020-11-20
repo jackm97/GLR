@@ -38,8 +38,8 @@ GLRENDER_INLINE void sceneViewer::addWavefront(std::string objPath, std::string 
     exit(1);
     }
 
-    newObj.shaderIndices.resize(newObj.shapes.size());
-	newObj.textureIndices.resize(newObj.shapes.size());
+    newObj.shaderPtrs.resize(newObj.shapes.size());
+	newObj.texturePtrs.resize(newObj.shapes.size());
 
 	newObj.noUVMap.resize(newObj.shapes.size());
 
@@ -73,7 +73,8 @@ GLRENDER_INLINE void sceneViewer::initGLBuffers(wavefrontObj &obj, bool calcNorm
 	// used within the draw function to determine if
 	// a texture should be used in the fragment shader
 	if (!textureExist("empty"))
-	{	texture emptyTexture("empty");
+	{	
+		texture emptyTexture("empty");
 		textures.push_back(emptyTexture);
 		emptyTexture.glRelease();
 	}
@@ -84,10 +85,6 @@ GLRENDER_INLINE void sceneViewer::initGLBuffers(wavefrontObj &obj, bool calcNorm
     tinyobj::attrib_t &attrib = obj.attrib;
     std::vector<tinyobj::shape_t> &shapes = obj.shapes;
     std::vector<tinyobj::material_t> &materials = obj.materials;
-
-    std::vector<int> &shaderIndices = obj.shaderIndices;
-
-    std::vector<int> &textureIndices = obj.textureIndices;
     
 	int shapeNum = shapes.size();
 	std::vector<float> vertexData;
@@ -321,7 +318,7 @@ GLRENDER_INLINE void sceneViewer::useShaderForShape(wavefrontObj &obj, std::stri
 	for (shad = 0; shad < shaders.size(); shad++)
 		if (shaderName == shaders[shad].name) break;
 
-	obj.shaderIndices[s] = shad;
+	obj.shaderPtrs[s] = &shaders[shad];
 }
 
 /*
@@ -443,7 +440,7 @@ GLRENDER_INLINE void sceneViewer::usetextureForShape(wavefrontObj &obj, std::str
 	for (tex = 0; tex < textures.size(); tex++)
 		if (textureName == textures[tex].name) break;
 
-	obj.textureIndices[s] = tex;
+	obj.texturePtrs[s] = &textures[tex];
 }
 
 /*
@@ -615,9 +612,9 @@ GLRENDER_INLINE void sceneViewer::drawObj(wavefrontObj &obj)
     std::vector<tinyobj::shape_t> &shapes = obj.shapes;
     std::vector<tinyobj::material_t> &materials = obj.materials;
 
-    std::vector<int> &shaderIndices = obj.shaderIndices;
+    std::vector<shader*> &shaderPtrs = obj.shaderPtrs;
 
-    std::vector<int> &textureIndices = obj.textureIndices;
+    std::vector<texture*> &texturePtrs = obj.texturePtrs;
 
 	int shapeNum = VAOList.size();
 	for (int s=0; s < shapeNum; s++)
@@ -627,22 +624,22 @@ GLRENDER_INLINE void sceneViewer::drawObj(wavefrontObj &obj)
 			continue;
 		
 		//enable shader
-		shaders[ shaderIndices[s] ].use();
+		shaderPtrs[s]->use();
 
 		// enable texture if there is one and if a uvmap exists
-		textures[ textureIndices[s] ].bind();
-		int textureAssigned = (textures[ textureIndices[s] ].name == "empty") ? 0 : 1;
+		texturePtrs[s]->bind();
+		int textureAssigned = (texturePtrs[s]->name == "empty") ? 0 : 1;
 		// if the user tried to assign a texture to a shape
 		// with no UVMap, "empty" texture is assigned
 		// if they texture map in a shader, they will
 		// get white
 		if (obj.noUVMap[s]) textures[0].bind();
-		glUniform1i(glGetUniformLocation(shaders[ shaderIndices[s] ].ID,"textureAssigned"), textureAssigned); 
+		glUniform1i(glGetUniformLocation(shaderPtrs[s]->ID,"textureAssigned"), textureAssigned); 
 		
 		
 		// set up uniforms
 		tinyobj::material_t mat = materials[shapes[s].mesh.material_ids[0]];		
-		setUniforms(obj, s, mat, shaderIndices[s]);
+		setUniforms(obj, s, mat, shaderPtrs[s]);
 		
 		// draw
 		glBindVertexArray(VAOList[s]);
@@ -651,34 +648,34 @@ GLRENDER_INLINE void sceneViewer::drawObj(wavefrontObj &obj)
 	}
 }
 
-GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, unsigned int shaderIdx)
+GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr)
 {
 
 	// camera stuff
 	camera* camPtr = &( cameraList[ cameraIdx ] );
 	view = glm::lookAt(camPtr->pos, camPtr->pos + camPtr->dir, camPtr->up);
-	unsigned int uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "cameraPos");
+	unsigned int uLocation = glGetUniformLocation(shaderPtr->ID, "cameraPos");
 	glUniform3fv(uLocation, 1, glm::value_ptr(camPtr->pos));
 
 	// mvp matrix
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "m");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "m");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(model * obj.modelMatrix));
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "v");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "v");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(view));
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "p");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "p");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(proj));
 	
 	// material info
-	shaders[ shaderIdx ].setVec3("Ka",  mat.ambient);
-	shaders[ shaderIdx ].setVec3("Kd",  mat.diffuse);
-	shaders[ shaderIdx ].setVec3("Ks",  mat.specular);
-	shaders[ shaderIdx ].setVec3("Ke",  mat.emission);
-	shaders[ shaderIdx ].setFloat("Ns", mat.shininess);
+	shaderPtr->setVec3("Ka",  mat.ambient);
+	shaderPtr->setVec3("Kd",  mat.diffuse);
+	shaderPtr->setVec3("Ks",  mat.specular);
+	shaderPtr->setVec3("Ke",  mat.emission);
+	shaderPtr->setFloat("Ns", mat.shininess);
 
 	// ambient light
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "ambientColor");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "ambientColor");
 	glUniform3fv(uLocation, 1, glm::value_ptr(ambientColor));
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "ambientI");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "ambientI");
 	glUniform1f(uLocation, ambientI);
 
 
@@ -700,15 +697,15 @@ GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int sh
 		Is.push_back(dirLightList[l].I);
 		specs.push_back(dirLightList[l].spec);
 	}
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "dirLightDir");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "dirLightDir");
 	glUniform3fv(uLocation, dirLightList.size(), dirs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "dirLightColor");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "dirLightColor");
 	glUniform3fv(uLocation, dirLightList.size(), colors.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "dirLightI");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "dirLightI");
 	glUniform1fv(uLocation, dirLightList.size(), Is.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "dirLightSpec");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "dirLightSpec");
 	glUniform1fv(uLocation, dirLightList.size(), specs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "numDirLight");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "numDirLight");
 	glUniform1i(uLocation, dirLightList.size());
 
 	// point lights
@@ -729,15 +726,15 @@ GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int sh
 		Is.push_back(pointLightList[l].I);
 		specs.push_back(pointLightList[l].spec);
 	}
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "pointLightPos");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "pointLightPos");
 	glUniform3fv(uLocation, pointLightList.size(), pos.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "pointLightColor");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "pointLightColor");
 	glUniform3fv(uLocation, pointLightList.size(), colors.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "pointLightI");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "pointLightI");
 	glUniform1fv(uLocation, pointLightList.size(), Is.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "pointLightSpec");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "pointLightSpec");
 	glUniform1fv(uLocation, pointLightList.size(), specs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "numPointLight");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "numPointLight");
 	glUniform1i(uLocation, pointLightList.size());
 
 	// spot lights
@@ -766,22 +763,22 @@ GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int sh
 
 		cutoffs.push_back(spotLightList[l].cutOffAngle);
 	}
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightPos");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightPos");
 	glUniform3fv(uLocation, spotLightList.size(), pos.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightDir");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightDir");
 	glUniform3fv(uLocation, spotLightList.size(), dirs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightColor");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightColor");
 	glUniform3fv(uLocation, spotLightList.size(), colors.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightI");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightI");
 	glUniform1fv(uLocation, spotLightList.size(), Is.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightSpec");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightSpec");
 	glUniform1fv(uLocation, spotLightList.size(), specs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "spotLightCutoff");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "spotLightCutoff");
 	glUniform1fv(uLocation, spotLightList.size(), cutoffs.data());
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "numSpotLight");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "numSpotLight");
 	glUniform1i(uLocation, spotLightList.size());
 
-	uLocation = glGetUniformLocation(shaders[ shaderIdx ].ID, "shapeCenter");
+	uLocation = glGetUniformLocation(shaderPtr->ID, "shapeCenter");
 	glUniform3fv(uLocation, 1, glm::value_ptr(obj.shapeCenters[shapeIdx]));
 }
 
