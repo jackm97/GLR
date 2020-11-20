@@ -88,11 +88,20 @@ GLRENDER_INLINE void sceneViewer2D::drawScene()
     }
     shaders[shaderIdx].use();
 
+	// model matrix
+    glm::mat4 m(1.0f);
+	int uLocation = glGetUniformLocation(shaders[shaderIdx].ID, "m");
+	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(m));
+
+    // set bounds
+    shaders[shaderIdx].setInt("isBackground", 1);
     shaders[shaderIdx].setFloat("boundX", boundX);
     shaders[shaderIdx].setFloat("boundY", boundY);
+
+    // matrial info
     float Kd[3]{1,1,1};
     shaders[shaderIdx].setVec3("Kd", Kd);
-    shaders[shaderIdx].setInt("textureAssigned", 0);
+    shaders[shaderIdx].setInt("textureAssigned", 1);
     
     int textureIdx;
     for (int t=0; t < textures.size(); t++)
@@ -116,6 +125,11 @@ GLRENDER_INLINE void sceneViewer2D::setUniforms(wavefrontObj &obj, unsigned int 
 	// model matrix
 	int uLocation = glGetUniformLocation(shaderPtr->ID, "m");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(obj.modelMatrix));
+
+    // set bounds
+    shaderPtr->setInt("isBackground", 0);
+    shaderPtr->setFloat("boundX", boundX);
+    shaderPtr->setFloat("boundY", boundY);
 	
 	// material info
 	shaderPtr->setVec3("Kd",  mat.diffuse);
