@@ -1,14 +1,32 @@
 #version 330 core
-out vec4 FragColor;
+/*
+*
+*
+RESERVED
+*
+*
+*/
+uniform vec3 Kd;
+
+uniform sampler2D texture1;
+uniform int textureAssigned;
+/*
+*
+*
+END RESERVED
+*
+*
+*/
 
 in vec2 TexCoord;
 
-// texture samplers
-uniform sampler2D texture1;
-
-vec4 colormap(float x);
+out vec4 FragColor;
 
 void main()
 {
-	FragColor = texture(texture1, TexCoord);
+    // texture mapping
+    vec3 texColor = vec3(texture(texture1, TexCoord));
+    vec3 diffuseBase;
+    (textureAssigned == 0) ? (diffuseBase = Kd) : (diffuseBase = vec3(texColor));
+	FragColor = vec4(diffuseBase,1);
 }

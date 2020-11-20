@@ -90,6 +90,9 @@ GLRENDER_INLINE void sceneViewer2D::drawScene()
 
     shaders[shaderIdx].setFloat("boundX", boundX);
     shaders[shaderIdx].setFloat("boundY", boundY);
+    float Kd[3]{1,1,1};
+    shaders[shaderIdx].setVec3("Kd", Kd);
+    shaders[shaderIdx].setInt("textureAssigned", 0);
     
     int textureIdx;
     for (int t=0; t < textures.size(); t++)
@@ -101,7 +104,21 @@ GLRENDER_INLINE void sceneViewer2D::drawScene()
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    textures[textureIdx].unbind();    
+    textures[textureIdx].unbind();  
+    
+	for (int obj = 0; obj < wavefrontObjList.size(); obj++)
+		drawObj(wavefrontObjList[obj]);  
+}
+
+GLRENDER_INLINE void sceneViewer2D::setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr)
+{
+
+	// model matrix
+	int uLocation = glGetUniformLocation(shaderPtr->ID, "m");
+	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(obj.modelMatrix));
+	
+	// material info
+	shaderPtr->setVec3("Kd",  mat.diffuse);
 }
 
 } // namespace glr

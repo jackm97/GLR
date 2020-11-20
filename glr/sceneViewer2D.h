@@ -24,6 +24,8 @@ class sceneViewer2D : public renderBase {
         float boundX, boundY;
 
         unsigned int VBO, VAO, EBO;
+
+        void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr);
 };
 
 } //namespace glr
