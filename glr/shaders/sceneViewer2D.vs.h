@@ -8,7 +8,7 @@ out vec2 TexCoord;\n \
 \n \
 void main()\n \
 {\n \
-	gl_Position = vec4(aPos, 1.0);\n \
+	gl_Position = vec4(inPos, 1.0);\n \
 	gl_Position.x /= boundX;\n \
 	gl_Position.y /= boundY;\n \
 	TexCoord = vec2(inUV.x, inUV.y);\n \
