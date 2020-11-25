@@ -30,8 +30,8 @@ void main()
 	bool isBackgroundBool = (isBackground == 1);
 	(!isBackgroundBool) ? (gl_Position.x -= boundX/2) : (gl_Position.x = gl_Position.x);
 	(!isBackgroundBool) ? (gl_Position.y -= boundY/2) : (gl_Position.y = gl_Position.y);
-	gl_Position.x /= (boundX/2);
-	gl_Position.y /= (boundY/2);
+	(!isBackgroundBool) ? (gl_Position.x /= (boundX/2)) : (gl_Position.x = gl_Position.x);
+	(!isBackgroundBool) ? (gl_Position.y /= (boundY/2)) : (gl_Position.y = gl_Position.y);
 	
 	gl_Position = m * gl_Position;
 	TexCoord = vec2(inUV.x, inUV.y);
