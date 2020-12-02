@@ -32,6 +32,7 @@ void main()\n \
 	(!isBackgroundBool) ? (gl_Position.y -= boundY/2) : (gl_Position.y = gl_Position.y);\n \
 	(!isBackgroundBool) ? (gl_Position.x /= (boundX/2)) : (gl_Position.x = gl_Position.x);\n \
 	(!isBackgroundBool) ? (gl_Position.y /= (boundY/2)) : (gl_Position.y = gl_Position.y);\n \
+	(!isBackgroundBool) ? (gl_Position.z = 0) : (gl_Position.y = gl_Position.y);\n \
 \n \
 	gl_Position = m * gl_Position;\n \
 	TexCoord = vec2(inUV.x, inUV.y);\n \
