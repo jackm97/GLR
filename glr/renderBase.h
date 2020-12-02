@@ -44,23 +44,23 @@ class renderBase
         
         // texture stuff
         
-        void addtexture(std::string texturePath, std::string textureName);
+        void addTexture(std::string texturePath, std::string textureName);
         
         void addTexture(int width, int height, std::string textureName);
         
         void uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data);
 
-        void usetextureForAll(std::string textureName);
+        void useTextureForAll(std::string textureName);
 
-        void usetextureForObject(std::string objName, std::string textureName);
+        void useTextureForObject(std::string objName, std::string textureName);
 
-        void usetextureForObjectList(std::vector<std::string> objectList, std::string textureName);
+        void useTextureForObjectList(std::vector<std::string> objectList, std::string textureName);
 
-        void usetextureForShape(std::string objName, std::string shapeName, std::string textureName);
+        void useTextureForShape(std::string objName, std::string shapeName, std::string textureName);
 
         void usetextureForShapeList(std::string objName, std::vector<std::string> shapeList, std::string textureName);
 
-        unsigned int gettextureID(std::string textureName);
+        unsigned int getTextureID(std::string textureName);
 
         bool textureExist(std::string textureName);
 
@@ -89,8 +89,8 @@ class renderBase
         void useShaderForShape(wavefrontObj &obj, std::string shapeName, std::string shaderName);
         void useShaderForObject(wavefrontObj &obj, std::string shaderName);
 
-        void usetextureForShape(wavefrontObj &obj, std::string shapeName, std::string textureName);
-        void usetextureForObject(wavefrontObj &obj, std::string textureName);
+        void useTextureForShape(wavefrontObj &obj, std::string shapeName, std::string textureName);
+        void useTextureForObject(wavefrontObj &obj, std::string textureName);
 
         void drawObj(wavefrontObj &obj);
 

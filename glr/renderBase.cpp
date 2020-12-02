@@ -103,12 +103,12 @@ GLRENDER_INLINE void renderBase::initGLBuffers(wavefrontObj &obj, bool calcNorma
 			std::string diffuse_texname = materials[shapes[s].mesh.material_ids[0]].diffuse_texname;
 			if (diffuse_texname.length() != 0)
 			{
-				addtexture(baseDir + diffuse_texname, diffuse_texname);
-				usetextureForShape(obj, shapes[s].name, diffuse_texname);
+				addTexture(baseDir + diffuse_texname, diffuse_texname);
+				useTextureForShape(obj, shapes[s].name, diffuse_texname);
 			}
 			else
 			{
-				usetextureForShape(obj, shapes[s].name, "empty");
+				useTextureForShape(obj, shapes[s].name, "empty");
 			}
 			
 			// Loop over vertices in the face.
@@ -321,7 +321,7 @@ PUBLIC TEXTURE STUFF
 *
 *
 */
-GLRENDER_INLINE void renderBase::addtexture(std::string texturePath, std::string textureName)
+GLRENDER_INLINE void renderBase::addTexture(std::string texturePath, std::string textureName)
 {
 	if (textures.size() > MAX_TEXTURE_COUNT) std::cerr << "Exceded Maximum Texture Count in renderBase" << std::endl;
 	
@@ -347,13 +347,13 @@ GLRENDER_INLINE void renderBase::uploadPix2Tex(std::string textureName, GLenum f
     }
 }
 
-GLRENDER_INLINE void renderBase::usetextureForAll(std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForAll(std::string textureName)
 {
 	for (int obj = 0; obj < wavefrontObjList.size(); obj++)
-		usetextureForObject(wavefrontObjList[obj], textureName);
+		useTextureForObject(wavefrontObjList[obj], textureName);
 }
 
-GLRENDER_INLINE void renderBase::usetextureForObject(std::string objName, std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForObject(std::string objName, std::string textureName)
 {
 	int obj;
 	for (obj = 0; obj < wavefrontObjList.size(); obj++)
@@ -362,17 +362,17 @@ GLRENDER_INLINE void renderBase::usetextureForObject(std::string objName, std::s
 	}
 	
 	for (int s = 0; s < wavefrontObjList[obj].shapes.size(); s++)
-		usetextureForShape(wavefrontObjList[obj], wavefrontObjList[obj].shapes[s].name, textureName);
+		useTextureForShape(wavefrontObjList[obj], wavefrontObjList[obj].shapes[s].name, textureName);
 }
 
-GLRENDER_INLINE void renderBase::usetextureForObjectList(std::vector<std::string> objList, std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForObjectList(std::vector<std::string> objList, std::string textureName)
 {
 	int obj;
 	for (obj = 0; obj < objList.size(); obj++)
-		usetextureForObject(objList[obj], textureName);
+		useTextureForObject(objList[obj], textureName);
 }
 
-GLRENDER_INLINE void renderBase::usetextureForShape(std::string objName, std::string shapeName, std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForShape(std::string objName, std::string shapeName, std::string textureName)
 {
 	int obj;
 	for (obj = 0; obj < wavefrontObjList.size(); obj++)
@@ -380,7 +380,7 @@ GLRENDER_INLINE void renderBase::usetextureForShape(std::string objName, std::st
 		if (objName == wavefrontObjList[obj].name) break;
 	}
 
-	usetextureForShape(wavefrontObjList[obj], shapeName, textureName);
+	useTextureForShape(wavefrontObjList[obj], shapeName, textureName);
 }
 
 GLRENDER_INLINE void renderBase::usetextureForShapeList(std::string objName, std::vector<std::string> shapeList, std::string textureName)
@@ -392,10 +392,10 @@ GLRENDER_INLINE void renderBase::usetextureForShapeList(std::string objName, std
 	}
 	
 	for (int s = 0; s < shapeList.size(); s++)
-		usetextureForShape(wavefrontObjList[obj], shapeList[s], textureName);
+		useTextureForShape(wavefrontObjList[obj], shapeList[s], textureName);
 }
 
-GLRENDER_INLINE unsigned int renderBase::gettextureID(std::string textureName)
+GLRENDER_INLINE unsigned int renderBase::getTextureID(std::string textureName)
 {
 	int ID;
 	for (int i=0; i<textures.size(); i++)
@@ -427,13 +427,13 @@ PRIVATE TEXTURE STUFF
 *
 *
 */
-GLRENDER_INLINE void renderBase::usetextureForObject(wavefrontObj &obj, std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForObject(wavefrontObj &obj, std::string textureName)
 {
 	for (int s = 0; s < obj.shapes.size(); s++)
-		usetextureForShape(obj, obj.shapes[s].name, textureName);
+		useTextureForShape(obj, obj.shapes[s].name, textureName);
 }
 
-GLRENDER_INLINE void renderBase::usetextureForShape(wavefrontObj &obj, std::string shapeName, std::string textureName)
+GLRENDER_INLINE void renderBase::useTextureForShape(wavefrontObj &obj, std::string shapeName, std::string textureName)
 {
 	int s;
 	for (s = 0; s < obj.shapes.size(); s++)
