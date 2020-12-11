@@ -49,10 +49,10 @@ GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
     // vertices
     float vertices[] = {
     // positions            // texture coords
-    1.0f/boundX,  1.0f/boundY, 0.5f,   1.0f, 1.0f,   // top right
-    1.0f/boundX, -1.0f/boundY, 0.5f,   1.0f, 0.0f,   // bottom right
-    -1.0f/boundX, -1.0f/boundY, 0.5f,   0.0f, 0.0f,   // bottom left
-    -1.0f/boundX,  1.0f/boundY, 0.5f,   0.0f, 1.0f    // top left 
+    1.0f,  1.0f, 0.5f,   1.0f, 1.0f,   // top right
+    1.0f, -1.0f, 0.5f,   1.0f, 0.0f,   // bottom right
+    -1.0f, -1.0f, 0.5f,   0.0f, 0.0f,   // bottom left
+    -1.0f,  1.0f, 0.5f,   0.0f, 1.0f    // top left 
     };
     unsigned int indices[] = {
             0, 1, 3, // first triangle
@@ -77,6 +77,12 @@ GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+}
+
+GLRENDER_INLINE void sceneViewer2D::changeBounds(float boundX, float boundY)
+{
+    this->boundX = boundX;
+    this->boundY = boundY;
 }
 
 GLRENDER_INLINE void sceneViewer2D::drawScene()

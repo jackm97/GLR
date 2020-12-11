@@ -18,6 +18,8 @@ class sceneViewer2D : public renderBase {
 
         void init(float boundX, float boundY);
 
+        void changeBounds(float boundX, float boundY);
+
         void drawScene();
 
     private:
