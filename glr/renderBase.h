@@ -100,10 +100,10 @@ class renderBase
 
 };
 
+} // namespace glr
+
 #ifndef GLRENDER_STATIC   
     #include <glr/renderBase.cpp>
 #endif
-
-} // namespace glr
 
 #endif
