@@ -13,7 +13,6 @@ class shader;
 class texture;
 class renderBase;
 
-
 class wavefrontObj
 {
     public:

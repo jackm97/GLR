@@ -30,6 +30,10 @@ GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
 			emptyTexture.glRelease();
 		}
 
+        // the shaders are included as .h
+        // files containing the char array
+        // of the shader so that the path
+        // to the shaders are not required
         std::string vCode =
         #include <glr/shaders/sceneViewer2D.vs.h>
         ;

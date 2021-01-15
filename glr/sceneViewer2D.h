@@ -23,7 +23,7 @@ class sceneViewer2D : public renderBase {
         void drawScene();
 
     private:
-        float boundX, boundY;
+        float boundX, boundY; // the viewport goes from x=0->boundX and y=0->boundY
 
         unsigned int VBO, VAO, EBO;
 
