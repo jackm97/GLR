@@ -115,6 +115,8 @@ GLRENDER_INLINE void texture::operator=(const texture &src)
 
     initializeEmpty(src.width, src.height);
     loadPixels(GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    free(data);
 }
 
 GLRENDER_INLINE void texture::glRelease()
