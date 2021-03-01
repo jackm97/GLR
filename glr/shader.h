@@ -19,7 +19,9 @@ public:
 	std::string name;
 
 	// Empty Constructor
-	shader(){ID = -1; name = "";};	
+	shader(){ID = -1; name = "";};
+
+	shader(const shader &src);	
 
 	// Constructor reads and builds shader
 	shader(const char* vertexPath, const char* fragmentPath, shaderLoadType type=PATH_TO_CODE);
@@ -31,6 +33,9 @@ public:
 	// set uniform functions (best to just do this manually)
 	// in other words, don't bother with these unless you want to
 	// take the time to implement all the possibilities yourself
+	//
+	// By calling any one of these, the shader is set to be
+	// active
 	void setBool(const std::string &name, bool value) const;
 	void setInt(const std::string &name, int value) const;
 	void setFloat(const std::string &name, float value) const;
@@ -38,7 +43,13 @@ public:
 	void setVec4(const std::string &name, float value[4]) const;
 	void setMat4(const std::string &name, float* value) const;
 
+	void operator=(const shader &src);	
+
+	// also removes shader from gpu mem
+	~shader();
+
 private:
+	std::string vertexCode, fragmentCode;
 	void compileProgram(const char* vertexPath, const char* fragmentPath, shaderLoadType type);
 };
 }

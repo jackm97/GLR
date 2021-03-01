@@ -9,10 +9,8 @@ GLRENDER_INLINE sceneViewer2D::sceneViewer2D()
 
 }
 
-GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
+GLRENDER_INLINE void sceneViewer2D::init()
 {
-    this->boundX = boundX;
-    this->boundY = boundY;
 	
     if (!isInit){
 		isInit = true;
@@ -27,7 +25,6 @@ GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
 		{	
 			texture emptyTexture("empty");
 			textures.push_back(emptyTexture);
-			emptyTexture.glRelease();
 		}
 
         // the shaders are included as .h
@@ -83,7 +80,7 @@ GLRENDER_INLINE void sceneViewer2D::init(float boundX, float boundY)
     glEnableVertexAttribArray(1);
 }
 
-GLRENDER_INLINE void sceneViewer2D::changeBounds(float boundX, float boundY)
+GLRENDER_INLINE void sceneViewer2D::setBounds(float boundX, float boundY)
 {
     this->boundX = boundX;
     this->boundY = boundY;

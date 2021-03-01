@@ -2,6 +2,10 @@
 #define RENDERBASE_H
 #include "glr_inline.h"
 
+#ifdef GLRENDER_STATIC
+#  include <glad/glad.h>
+#endif
+
 #include <glr/shader.h>
 #include <glr/texture.h>
 
@@ -15,6 +19,8 @@ class renderBase
     public:
 
         renderBase(){};
+
+        virtual void init() = 0;
 
         void addWavefront(std::string objPath, std::string baseDir, std::string name);
 
@@ -72,7 +78,9 @@ class renderBase
 
         void setObjTransfrom(std::string objName, glm::mat4 modelMatrix);
 
-        ~renderBase(){}
+        void cleanup();
+
+        ~renderBase();
 
     protected:
         bool isInit = false; // so we don't initialize the renderer more than once
@@ -94,7 +102,7 @@ class renderBase
 
         void drawObj(wavefrontObj &obj);
 
-        virtual void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr){};
+        virtual void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr) = 0;
 
         glm::vec3 getShapeCenter(wavefrontObj &obj, unsigned int shapeIdx);
 

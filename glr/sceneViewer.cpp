@@ -22,7 +22,6 @@ GLRENDER_INLINE void sceneViewer::init()
 		{	
 			texture emptyTexture("empty");
 			textures.push_back(emptyTexture);
-			emptyTexture.glRelease();
 		}
 	}
 }

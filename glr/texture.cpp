@@ -119,11 +119,9 @@ GLRENDER_INLINE void texture::operator=(const texture &src)
     free(data);
 }
 
-GLRENDER_INLINE void texture::glRelease()
+GLRENDER_INLINE texture::~texture()
 {
-    if (ID!=-1)
-        glDeleteTextures(1, (GLuint *) &ID);
-    ID = -1;
+    glRelease();
 }
 
 // PRIVATE:
@@ -154,5 +152,12 @@ GLRENDER_INLINE void texture::initializeEmpty(int m, int n)
     delete [] data;
 
     ID = texture;
+}
+
+GLRENDER_INLINE void texture::glRelease()
+{
+    if (ID!=-1)
+        glDeleteTextures(1, (GLuint *) &ID);
+    ID = -1;
 }
 }

@@ -328,14 +328,12 @@ GLRENDER_INLINE void renderBase::addTexture(std::string texturePath, std::string
 	if (textureExist(textureName)) return;
 	texture newTexture( texturePath, textureName );
 	textures.push_back( newTexture );
-	newTexture.glRelease();
 }
 
 GLRENDER_INLINE void renderBase::addTexture(int width, int height, std::string textureName)
 {
     texture newTexture(width,height,textureName);
     textures.push_back( newTexture );
-    newTexture.glRelease();
 }
 
 GLRENDER_INLINE void renderBase::uploadPix2Tex(std::string textureName, GLenum format, GLenum type, void* data)
@@ -472,6 +470,33 @@ GLRENDER_INLINE void renderBase::setObjTransfrom(std::string objName, glm::mat4 
 			return;
 		}
 }
+
+GLRENDER_INLINE void renderBase::cleanup()
+{
+	shaders.clear();
+	textures.clear();
+
+	isInit = false;
+}
+
+
+GLRENDER_INLINE renderBase::~renderBase()
+{
+	if (isInit)
+	{
+		std::cerr << "glr::renderBase: Call glr::renderBase::cleanup() before OpenGL context deletion" << std::endl;
+	}
+}
+
+
+
+/*
+*
+*
+OTHER PRIVATE STUFF
+*
+*
+*/
 
 GLRENDER_INLINE void renderBase::drawObj(wavefrontObj &obj)
 {	

@@ -66,11 +66,13 @@ class texture{
 
         void operator=(const texture &src);
 
-        // release texture object from gpu mem
-        void glRelease();
+        ~texture();
 
     private:
         void initializeEmpty(int m, int n);
+
+        // release texture object from gpu mem
+        void glRelease();
 };
 }
 
