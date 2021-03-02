@@ -1,5 +1,9 @@
 #include <glr/sceneViewer.h>
 
+#ifdef GLRENDER_STATIC
+#   include <glad/glad.h>
+#endif
+
 #include <cstring>
 #include <string>
 #include <iostream>

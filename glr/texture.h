@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 
+typedef unsigned int GLenum;
+
 namespace glr {
 class texture{
     public:

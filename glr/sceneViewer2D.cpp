@@ -2,6 +2,10 @@
 
 #include <string>
 
+#ifdef GLRENDER_STATIC
+#   include <glad/glad.h>
+#endif
+
 namespace glr {
 
 GLRENDER_INLINE sceneViewer2D::sceneViewer2D()

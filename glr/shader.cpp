@@ -1,5 +1,9 @@
 #include <glr/shader.h>
 
+#ifdef GLRENDER_STATIC
+#   include <glad/glad.h>
+#endif
+
 #include <fstream>
 #include <sstream>
 #include <iostream>

@@ -2,10 +2,6 @@
 #define RENDERBASE_H
 #include "glr_inline.h"
 
-#ifdef GLRENDER_STATIC
-#  include <glad/glad.h>
-#endif
-
 #include <glr/shader.h>
 #include <glr/texture.h>
 

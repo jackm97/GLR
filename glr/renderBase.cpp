@@ -4,6 +4,10 @@
 #define TINYOBJLOADER_INLINE GLRENDER_INLINE
 #include <glr/tinyobjloader/tiny_obj_loader.h>
 
+#ifdef GLRENDER_STATIC
+#   include <glad/glad.h>
+#endif
+
 #include <cstring>
 #include <string>
 #include <iostream>

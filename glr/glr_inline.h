@@ -6,7 +6,7 @@
 #  define GLRENDER_INLINE inline
 #else
 #  define GLRENDER_INLINE
-#  include <glad/glad.h>
+#  include <glr/initialize.h>
 #endif
 
 #include <glr/glr_typedefs.h>

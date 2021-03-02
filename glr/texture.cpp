@@ -5,6 +5,10 @@
 #define STB_CUSTOM_NAMESPACE glr
 #include <glr/stb/stb_image.h>
 
+#ifdef GLRENDER_STATIC
+#   include <glad/glad.h>
+#endif
+
 namespace glr {
 
 GLRENDER_INLINE texture::texture()
