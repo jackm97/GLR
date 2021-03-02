@@ -22,33 +22,15 @@ GLRENDER_INLINE void sceneViewer2D::init()
 		shaders.reserve(MAX_SHADER_COUNT);
 		textures.reserve(MAX_TEXTURE_COUNT);
 
-		// assign an empty texture for shapes without textures
-		// used within the draw function to determine if
-		// a texture should be used in the fragment shader
-		if (!textureExist("empty"))
-		{	
-			texture emptyTexture("empty");
-			textures.push_back(emptyTexture);
-		}
+		setupEmptyTexture();
 
-        // the shaders are included as .h
-        // files containing the char array
-        // of the shader so that the path
-        // to the shaders are not required
-        std::string vCode =
-        #include <glr/shaders/sceneViewer2D.vs.h>
-        ;
-        std::string fCode =
-        #include <glr/shaders/sceneViewer2D.fs.h>
-        ;
-        
-        shaders.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
+        setupDefaultShader();
+
+        addTexture(1, 1, "background");
 	}
     else
     {
-        glDeleteBuffers(1, (GLuint*) &EBO);
-        glDeleteBuffers(1, (GLuint*) &VBO);
-        glDeleteVertexArrays(1, (GLuint*) &VAO);
+        return;
     }
 
     // vertices
@@ -144,6 +126,22 @@ GLRENDER_INLINE void sceneViewer2D::setUniforms(wavefrontObj &obj, unsigned int 
 	
 	// material info
 	shaderPtr->setVec3("Kd",  mat.diffuse);
+}
+
+GLRENDER_INLINE void sceneViewer2D::setupDefaultShader()
+{
+    // the shaders are included as .h
+    // files containing the char array
+    // of the shader so that the path
+    // to the shaders are not required
+    std::string vCode =
+    #include <glr/shaders/sceneViewer2D.vs.h>
+    ;
+    std::string fCode =
+    #include <glr/shaders/sceneViewer2D.fs.h>
+    ;
+    
+    shaders.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
 }
 
 } // namespace glr

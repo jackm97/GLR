@@ -18,7 +18,7 @@ class renderBase
 
         virtual void init() = 0;
 
-        void addWavefront(std::string objPath, std::string baseDir, std::string name);
+        void addWavefront(std::string objPath, std::string baseDir, std::string name, bool calcNormals=false, bool flipNormals=false);
 
         void initGLBuffers(bool calcNormals=false, bool flipNormals=false);
 
@@ -42,6 +42,8 @@ class renderBase
         unsigned int getShaderID(std::string shaderName);
 
         bool shaderExist(std::string shaderName);
+
+        void deleteShader(std::string shaderName);
 
         
         // texture stuff
@@ -87,6 +89,9 @@ class renderBase
         const int MAX_SHADER_COUNT = 100;            
         std::vector<texture> textures;
         const int MAX_TEXTURE_COUNT = 100; 
+
+        virtual void setupDefaultShader() = 0;
+        virtual void setupEmptyTexture();
 
         void initGLBuffers(wavefrontObj &obj, bool calcNormals=false, bool flipNormals=false);
 

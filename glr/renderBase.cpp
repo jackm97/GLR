@@ -15,7 +15,7 @@
 
 namespace glr {
 
-GLRENDER_INLINE void renderBase::addWavefront(std::string objPath, std::string baseDir, std::string name)
+GLRENDER_INLINE void renderBase::addWavefront(std::string objPath, std::string baseDir, std::string name, bool calcNormals, bool flipNormals)
 {
 	wavefrontObj newObj;
 
@@ -48,6 +48,10 @@ GLRENDER_INLINE void renderBase::addWavefront(std::string objPath, std::string b
 	newObj.noUVMap.resize(newObj.shapes.size());
 
 	wavefrontObjList.push_back(newObj);
+
+	initGLBuffers(name, calcNormals, flipNormals);
+
+	useShaderForObject(name, "default");
 }
 
 GLRENDER_INLINE void renderBase::initGLBuffers(bool calcNormals, bool flipNormals)
@@ -222,8 +226,11 @@ PUBLIC SHADER STUFF
 */
 GLRENDER_INLINE void renderBase::addShader(std::string vertPath, std::string fragPath, std::string shaderName)
 {
-	if (shaders.size() > MAX_SHADER_COUNT) std::cerr << "Exceded Maximum Shader Count in renderBase" << std::endl;
-	if (shaderExist(shaderName)) return;
+	if (shaderExist(shaderName))
+		deleteShader(shaderName);
+	else
+		if (shaders.size() > MAX_SHADER_COUNT) std::cerr << "Exceded Maximum Shader Count in renderBase" << std::endl;
+
     shaders.push_back( shader( vertPath.c_str(), fragPath.c_str(), shaderName.c_str() ) );
 }
 
@@ -292,6 +299,14 @@ GLRENDER_INLINE bool renderBase::shaderExist(std::string shaderName)
 	return false;
 }
 
+GLRENDER_INLINE void renderBase::deleteShader(std::string shaderName)
+{
+    for (int s=0; s < shaders.size(); s++)
+    {
+        if (shaders[s].name == shaderName){shaders.erase(shaders.begin() + s);}
+    }
+}
+
 /*
 *
 *
@@ -327,7 +342,10 @@ PUBLIC TEXTURE STUFF
 */
 GLRENDER_INLINE void renderBase::addTexture(std::string texturePath, std::string textureName)
 {
-	if (textures.size() > MAX_TEXTURE_COUNT) std::cerr << "Exceded Maximum Texture Count in renderBase" << std::endl;
+	if (textureExist(textureName))
+		deleteTexture(textureName);
+	else
+		if (textures.size() > MAX_TEXTURE_COUNT) std::cerr << "Exceded Maximum Texture Count in renderBase" << std::endl;
 	
 	if (textureExist(textureName)) return;
 	texture newTexture( texturePath, textureName );
@@ -336,6 +354,11 @@ GLRENDER_INLINE void renderBase::addTexture(std::string texturePath, std::string
 
 GLRENDER_INLINE void renderBase::addTexture(int width, int height, std::string textureName)
 {
+	if (textureExist(textureName))
+		deleteTexture(textureName);
+	else
+		if (textures.size() > MAX_TEXTURE_COUNT) std::cerr << "Exceded Maximum Texture Count in renderBase" << std::endl;
+		
     texture newTexture(width,height,textureName);
     textures.push_back( newTexture );
 }
@@ -588,6 +611,18 @@ GLRENDER_INLINE glm::vec3 renderBase::getShapeCenter(wavefrontObj &obj, unsigned
 		index_offset += 3;
 	}
 	return glm::vec3{(maxx+minx)/2., (maxy+miny)/2., (maxz+minz)/2.};	
+}
+
+GLRENDER_INLINE void renderBase::setupEmptyTexture()
+{
+	// assign an empty texture for shapes without textures
+	// used within the draw function to determine if
+	// a texture should be used in the fragment shader
+	if (!textureExist("empty"))
+	{	
+		texture emptyTexture("empty");
+		textures.push_back(emptyTexture);
+	}
 }
 
 } //namespace glr

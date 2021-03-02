@@ -19,14 +19,9 @@ GLRENDER_INLINE void sceneViewer::init()
 		shaders.reserve(MAX_SHADER_COUNT);
 		textures.reserve(MAX_TEXTURE_COUNT);
 
-		// assign an empty texture for shapes without textures
-		// used within the draw function to determine if
-		// a texture should be used in the fragment shader
-		if (!textureExist("empty"))
-		{	
-			texture emptyTexture("empty");
-			textures.push_back(emptyTexture);
-		}
+		setupEmptyTexture();
+
+		setupDefaultShader();
 	}
 }
 
@@ -304,6 +299,22 @@ GLRENDER_INLINE void sceneViewer::setUniforms(wavefrontObj &obj, unsigned int sh
 
 	uLocation = glGetUniformLocation(shaderPtr->ID, "shapeCenter");
 	glUniform3fv(uLocation, 1, glm::value_ptr(obj.shapeCenters[shapeIdx]));
+}
+
+GLRENDER_INLINE void sceneViewer::setupDefaultShader()
+{
+    // the shaders are included as .h
+    // files containing the char array
+    // of the shader so that the path
+    // to the shaders are not required
+    std::string vCode =
+    #include <glr/shaders/sceneViewer.vs.h>
+    ;
+    std::string fCode =
+    #include <glr/shaders/sceneViewer.fs.h>
+    ;
+    
+    shaders.push_back( shader(vCode.c_str(), fCode.c_str(), "default", RAW_CODE) );
 }
 
 } // namespace glr

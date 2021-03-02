@@ -65,6 +65,8 @@ class sceneViewer : public renderBase
         std::vector<spotLight> spotLightList; 
         
         void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr);
+
+        void setupDefaultShader();
 };
 }
 
