@@ -18,7 +18,6 @@ namespace glr
 
 // forward declaration
 class OBJ;
-class sceneViewer;
 
 struct AABBNode
 {

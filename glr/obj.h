@@ -19,11 +19,6 @@
 
 namespace glr {
 
-// forward declarations for friend classes
-class renderBase;
-class sceneViewer;
-class sceneViewer2D;
-
 class OBJ
 {
     public:
@@ -41,9 +36,9 @@ class OBJ
         glm::vec3 center_; // center of entire obj
         float radius_; // radius of unscaled obj
 
-        friend renderBase;
-        friend sceneViewer;
-        friend sceneViewer2D;
+        friend class renderBase;
+        friend class sceneViewer;
+        friend class sceneViewer2D;
 
     public:
         OBJ() {}
