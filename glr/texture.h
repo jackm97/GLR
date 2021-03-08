@@ -10,9 +10,9 @@ typedef unsigned int GLenum;
 namespace glr {
 class texture{
     public:
-        int ID=-1;
-        int width, height;
-        std::string name;
+        int ID_=-1;
+        int width_, height_;
+        std::string name_ = "";
         
         // creates 1x1 GL_RGB white texture object
         // with name=""
@@ -24,7 +24,7 @@ class texture{
         // creates GL_RGB texture object from image path
         // with name
         // texture is unbound after creation
-        texture(std::string imagePath, std::string name);
+        texture(std::string img_path, std::string name);
 
         // creates 1x1 GL_RGB white texture object
         // with name
@@ -39,7 +39,7 @@ class texture{
         // creates GL_RGB texture object from image path
         // texture is unbound after creation
         // old texture is deleted
-        void genNewTexture(std::string imagePath);
+        void genNewTexture(std::string img_path);
 
         // creates 1x1 GL_RGB white texture object
         // texture is unbound after creation
@@ -68,13 +68,13 @@ class texture{
 
         void operator=(const texture &src);
 
+        // release texture object from gpu mem
+        void glRelease();
+
         ~texture();
 
     private:
         void initializeEmpty(int m, int n);
-
-        // release texture object from gpu mem
-        void glRelease();
 };
 }
 

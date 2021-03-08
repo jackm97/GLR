@@ -2,7 +2,7 @@
 #define TEX2SCREEN_H
 #include "glr_inline.h"
 
-#include <glr/renderBase.h>
+#include <glr/renderbase.h>
 
 #include <glr/shader.h>
 #include <glr/texture.h>
@@ -18,16 +18,16 @@ class sceneViewer2D : public renderBase {
 
         void init();
 
-        void setBounds(float boundX, float boundY);
+        void setBounds(float bound_x, float bound_y);
 
         void drawScene();
 
     private:
-        float boundX, boundY; // the viewport goes from x=0->boundX and y=0->boundY
+        float bound_x_, bound_y_; // the viewport goes from x=0->bound_x_ and y=0->bound_y_
 
-        unsigned int VBO, VAO, EBO;
+        unsigned int vbo_, vao_, ebo_;
 
-        void setUniforms(wavefrontObj &obj, unsigned int shapeIdx, tinyobj::material_t &mat, shader* shaderPtr);
+        void setUniforms();
 
         void setupDefaultShader();
 };
@@ -35,7 +35,7 @@ class sceneViewer2D : public renderBase {
 } //namespace glr
 
 #ifndef GLRENDER_STATIC   
-    #include <glr/sceneViewer2D.cpp>
+    #include <glr/sceneviewer2d.cpp>
 #endif
 
 #endif

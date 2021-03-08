@@ -15,18 +15,18 @@ class shader
 {
 public:
 	// program ID
-	unsigned int ID;
-	std::string name;
+	unsigned int ID_;
+	std::string name_;
 
 	// Empty Constructor
-	shader(){ID = -1; name = "";};
+	shader(){ID_ = -1; name_ = "";};
 
 	shader(const shader &src);	
 
 	// Constructor reads and builds shader
-	shader(const char* vertexPath, const char* fragmentPath, shaderLoadType type=PATH_TO_CODE);
+	shader(const char* vert_shader_info, const char* frag_shader_info, shaderLoadType type=PATH_TO_CODE);
 	// Constructor reads and builds shader and adds name
-	shader(const char* vertexPath, const char* fragmentPath, const char* name, shaderLoadType type=PATH_TO_CODE);
+	shader(const char* vert_shader_info, const char* frag_shader_info, const char* name, shaderLoadType type=PATH_TO_CODE);
 	// activate shader
 	void use() const;
 
@@ -45,12 +45,14 @@ public:
 
 	void operator=(const shader &src);	
 
-	// also removes shader from gpu mem
+	// release texture object from gpu mem
+	void glRelease();
+
 	~shader();
 
 private:
-	std::string vertexCode, fragmentCode;
-	void compileProgram(const char* vertexPath, const char* fragmentPath, shaderLoadType type);
+	std::string vertex_code_, fragment_code_;
+	void compileProgram(const char* vert_shader_info, const char* frag_shader_info, shaderLoadType type);
 };
 }
 

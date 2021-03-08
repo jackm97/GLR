@@ -13,7 +13,7 @@ namespace glr {
 
 GLRENDER_INLINE texture::texture()
 {
-    this->name = "";
+    this->name_ = "";
     initializeEmpty(1,1);
 }
 
@@ -22,9 +22,9 @@ GLRENDER_INLINE texture::texture(const texture &src)
     *this = src;
 }
 
-GLRENDER_INLINE texture::texture(std::string imagePath, std::string name)
+GLRENDER_INLINE texture::texture(std::string img_path, std::string name)
 {
-    this-> name = name;
+    this->name_ = name;
     
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -35,11 +35,11 @@ GLRENDER_INLINE texture::texture(std::string imagePath, std::string name)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load and generate the texture
-    int nrChannels;
-    unsigned char *data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 3);
+    int n_channels;
+    unsigned char *data = stbi_load(img_path.c_str(), &width_, &height_, &n_channels, 3);
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
@@ -48,58 +48,58 @@ GLRENDER_INLINE texture::texture(std::string imagePath, std::string name)
     }
     stbi_image_free(data);
 
-    ID = texture;
+    ID_ = texture;
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 GLRENDER_INLINE texture::texture(std::string name)
 {
-    this-> name = name;
+    this->name_ = name;
 
     initializeEmpty(1,1);
 }
 
 GLRENDER_INLINE  texture::texture(int m, int n, std::string name)
 {
-    this->name = name;
+    this->name_ = name;
 
     initializeEmpty(m,n);
 }
 
-GLRENDER_INLINE void texture::genNewTexture(std::string imagePath)
+GLRENDER_INLINE void texture::genNewTexture(std::string img_path)
 {
-    glDeleteTextures(1, (GLuint*) &ID);
-    texture newTexture(imagePath, this->name);
+    glDeleteTextures(1, (GLuint*) &ID_);
+    texture new_texture(img_path, this->name_);
 
-    *this = newTexture;
+    *this = new_texture;
 }
 
 GLRENDER_INLINE void texture::genNewTexture()
 {
-    glDeleteTextures(1, (GLuint*) &ID);
-    texture newTexture(this->name);
+    glDeleteTextures(1, (GLuint*) &ID_);
+    texture new_texture(this->name_);
 
-    *this = newTexture;
+    *this = new_texture;
 }
 
 GLRENDER_INLINE void texture::genNewTexture(int m, int n)
 {
-    glDeleteTextures(1, (GLuint*) &ID);
-    texture newTexture(m, n, this->name);
+    glDeleteTextures(1, (GLuint*) &ID_);
+    texture new_texture(m, n, this->name_);
 
-    *this = newTexture;
+    *this = new_texture;
 }
 
 GLRENDER_INLINE void texture::loadPixels(GLenum format, GLenum type, void* data)
 {
     this->bind();
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, type, data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width_, height_, format, type, data);
     this->unbind();
 }
 
 GLRENDER_INLINE void texture::bind() const
 {
-    glBindTexture(GL_TEXTURE_2D, ID);
+    glBindTexture(GL_TEXTURE_2D, ID_);
 }
 
 GLRENDER_INLINE void texture::unbind() const
@@ -110,14 +110,14 @@ GLRENDER_INLINE void texture::unbind() const
 
 GLRENDER_INLINE void texture::operator=(const texture &src)
 {
-    name = src.name;
-    unsigned char* data = (unsigned char*) malloc(3 * src.height * src.width * sizeof(unsigned char));
+    name_ = src.name_;
+    unsigned char* data = (unsigned char*) malloc(3 * src.height_ * src.width_ * sizeof(unsigned char));
     src.bind();
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     src.unbind();
     glRelease();
 
-    initializeEmpty(src.width, src.height);
+    initializeEmpty(src.width_, src.height_);
     loadPixels(GL_RGB, GL_UNSIGNED_BYTE, data);
 
     free(data);
@@ -132,8 +132,8 @@ GLRENDER_INLINE texture::~texture()
 
 GLRENDER_INLINE void texture::initializeEmpty(int m, int n)
 {    
-    width = m;
-    height = n;
+    width_ = m;
+    height_ = n;
 
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -151,17 +151,17 @@ GLRENDER_INLINE void texture::initializeEmpty(int m, int n)
         data[3*i + 1] = 255;
         data[3*i + 2] = 255;
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);
     delete [] data;
 
-    ID = texture;
+    ID_ = texture;
 }
 
 GLRENDER_INLINE void texture::glRelease()
 {
-    if (ID!=-1)
-        glDeleteTextures(1, (GLuint *) &ID);
-    ID = -1;
+    if (ID_!=-1)
+        glDeleteTextures(1, (GLuint *) &ID_);
+    ID_ = -1;
 }
 }

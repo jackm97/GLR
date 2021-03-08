@@ -1,31 +1,33 @@
 "#version 330 core\n \
- \n \
-/* \n \
-* \n \
-* \n \
-RESERVED \n \
-* \n \
-* \n \
-*/ \n \
-uniform vec3 cameraPos; \n \
- \n \
-uniform vec3 Ka; \n \
-uniform vec3 Kd; \n \
-uniform vec3 Ks; \n \
-uniform vec3 Ke; \n \
-uniform float Ns; \n \
- \n \
-uniform sampler2D texture1; \n \
-uniform int textureAssigned; \n \
- \n \
-uniform vec3 ambientColor; \n \
-uniform float ambientI; \n \
- \n \
-uniform vec3 dirLightDir[50]; \n \
-uniform vec3 dirLightColor[50]; \n \
-uniform float dirLightI[50]; \n \
-uniform float dirLightSpec[50]; \n \
-uniform int numDirLight; \n \
+\n \
+/*\n \
+*\n \
+*\n \
+RESERVED\n \
+*\n \
+*\n \
+*/\n \
+uniform int useVertColor;\n \
+\n \
+uniform vec3 cameraPos;\n \
+\n \
+uniform vec3 Ka;\n \
+uniform vec3 Kd;\n \
+uniform vec3 Ks;\n \
+uniform vec3 Ke;\n \
+uniform float Ns;\n \
+\n \
+uniform sampler2D texture1;\n \
+uniform int textureAssigned;\n \
+\n \
+uniform vec3 ambientLightColor;\n \
+uniform float ambientI;\n \
+\n \
+uniform vec3 dirLightDir[50];\n \
+uniform vec3 dirLightColor[50];\n \
+uniform float dirLightI[50];\n \
+uniform float dirLightSpec[50];\n \
+uniform int numDirLight;\n \
 \n \
 uniform vec3 pointLightPos[50];\n \
 uniform vec3 pointLightColor[50];\n \
@@ -50,6 +52,7 @@ END RESERVED\n \
 \n \
 in vec3 FragPos;\n \
 in vec3 Norm;\n \
+in vec3 VertColor;\n \
 in vec2 TexCoord;\n \
 \n \
 out vec4 FragColor;\n \
@@ -62,9 +65,17 @@ void main()\n \
     vec3 diffuseBase;\n \
     (textureAssigned == 0) ? (diffuseBase = Kd) : (diffuseBase = vec3(texColor));\n \
 \n \
+    // vertex coloring?\n \
+    (useVertColor == 1) ? (diffuseBase = VertColor) : (diffuseBase = diffuseBase);\n \
+    vec3 ambientBase;\n \
+    (useVertColor == 0) ? (ambientBase = Ka * diffuseBase) : (ambientBase = diffuseBase);\n \
+    vec3 specBase;\n \
+    (useVertColor == 0) ? (specBase = Ks) : (specBase = diffuseBase);\n \
+\n \
 \n \
     vec3 diffuseColor = vec3(0.0,0.0,0.0);\n \
     vec3 specColor = vec3(0.0,0.0,0.0);\n \
+    vec3 ambientColor = vec3(0.0,0.0,0.0);\n \
 \n \
     // directional lighting\n \
     for (int i=0; i<numDirLight; i++)\n \
@@ -83,7 +94,7 @@ void main()\n \
         (dotProd < 1e-10) ? (dotProd = 1e-10) : (dotProd = dotProd);\n \
         float spec = dirLightSpec[i] * pow(dotProd, Ns);\n \
 \n \
-        specColor += I * spec * lightColor * Ks;\n \
+        specColor += I * spec * lightColor * specBase;\n \
     }\n \
 \n \
     // point lighting\n \
@@ -103,7 +114,7 @@ void main()\n \
         (dotProd < 1e-10) ? (dotProd = 1e-10) : (dotProd = dotProd);\n \
         float spec = pointLightSpec[i] * pow(dotProd, Ns);\n \
 \n \
-        specColor += I * spec * lightColor * Ks;\n \
+        specColor += I * spec * lightColor * specBase;\n \
     }\n \
 \n \
     // spot lighting\n \
@@ -130,8 +141,12 @@ void main()\n \
         float spec = spotLightSpec[i] * pow(dotProd, Ns);\n \
         spec *= softLightScale;\n \
 \n \
-        (isLit) ? (specColor += I * spec * lightColor * Ks) : (specColor += 0);\n \
+        (isLit) ? (specColor += I * spec * lightColor * specBase) : (specColor += 0);\n \
     }\n \
+\n \
+    // ambient lighting\n \
+    ambientColor = ambientI * ambientLightColor * ambientBase;\n \
     \n \
-    FragColor = vec4( ambientI * ambientColor * Ka * diffuseBase + specColor + diffuseColor + Ke, 1.0);\n \
-} "
+    FragColor = vec4( ambientColor + specColor + diffuseColor + Ke, 1.0);\n \
+} \n \
+"

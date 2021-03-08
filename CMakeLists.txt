@@ -4,6 +4,16 @@ project(jfs VERSION 0.1.0)
 #####################################################################
 # CUSTOM OPTIONS:
 #
+# GLAD PATH:
+#   If adding this as a CMake subdirectory
+#   GLAD_PATH can instead be set in the top
+#   level CMakeLists.txt
+# set(GLAD_SRC_NAME glad.c) 
+if(NOT DEFINED GLAD_PATH)   
+    set(GLAD_PATH ${PROJECT_SOURCE_DIR}/extern/glad)
+    include_directories(${GLAD_PATH}/include)
+endif()
+
 # GLM PATH:
 #   If adding this as a CMake subdirectory
 #   GLM_PATH can instead be set in the top
@@ -34,31 +44,22 @@ add_definitions(-DGLRENDER_STATIC)
 add_library(glr STATIC ${GLR_SOURCE_DIR}/initialize.cpp
                        ${GLR_SOURCE_DIR}/shader.cpp
                        ${GLR_SOURCE_DIR}/texture.cpp
-                       ${GLR_SOURCE_DIR}/renderBase.cpp
-                       ${GLR_SOURCE_DIR}/sceneViewer.cpp
-                       ${GLR_SOURCE_DIR}/sceneViewer2D.cpp )
+                       ${GLR_SOURCE_DIR}/obj.cpp
+                       ${GLR_SOURCE_DIR}/aabb_tree.cpp
+                       ${GLR_SOURCE_DIR}/renderbase.cpp
+                       ${GLR_SOURCE_DIR}/sceneviewer.cpp
+                       ${GLR_SOURCE_DIR}/sceneviewer2d.cpp
+                       ${GLAD_PATH}/src/${GLAD_SRC_NAME} )
 
 set(GLR_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
-                ${GLR_SOURCE_DIR}/glr_typedefs.h
                 ${GLR_SOURCE_DIR}/initialize.h
                 ${GLR_SOURCE_DIR}/shader.h
                 ${GLR_SOURCE_DIR}/texture.h
-                ${GLR_SOURCE_DIR}/renderBase.h
-                ${GLR_SOURCE_DIR}/sceneViewer.h
-                ${GLR_SOURCE_DIR}/sceneViewer2D.h )
+                ${GLR_SOURCE_DIR}/obj.h
+                ${GLR_SOURCE_DIR}/aabb_tree.h
+                ${GLR_SOURCE_DIR}/renderbase.h
+                ${GLR_SOURCE_DIR}/sceneviewer.h
+                ${GLR_SOURCE_DIR}/sceneviewer2d.h )
 
 install(TARGETS glr DESTINATION ${INSTALL_PATH}/lib/glr)
 install(FILES ${GLR_HEADERS} DESTINATION ${INSTALL_PATH}/include/glr)
-install(DIRECTORY ${GLM_PATH} DESTINATION ${INSTALL_PATH}/include/glr)
-
-
-# GLAD PATH:
-#   If adding this as a CMake subdirectory
-#   GLAD_PATH can instead be set in the top
-#   level CMakeLists.txt
-set(GLAD_SRC_NAME glad.c) 
-set(GLAD_PATH ${PROJECT_SOURCE_DIR}/extern/glad)
-include_directories(${GLAD_PATH}/include)
-add_library(glad_glr STATIC ${GLAD_PATH}/src/${GLAD_SRC_NAME})
-target_link_libraries(glad_glr PRIVATE ${CMAKE_DL_LIBS})
-target_link_libraries(glr PRIVATE glad_glr)

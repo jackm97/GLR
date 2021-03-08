@@ -6,6 +6,8 @@ namespace glr
 
 void initialize();
 
+void cleanup();
+
 } // namespace glr
 
 #endif

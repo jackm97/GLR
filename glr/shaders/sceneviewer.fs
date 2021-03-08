@@ -7,6 +7,8 @@ RESERVED
 *
 *
 */
+uniform int useVertColor;
+
 uniform vec3 cameraPos;
 
 uniform vec3 Ka;
@@ -18,7 +20,7 @@ uniform float Ns;
 uniform sampler2D texture1;
 uniform int textureAssigned;
 
-uniform vec3 ambientColor;
+uniform vec3 ambientLightColor;
 uniform float ambientI;
 
 uniform vec3 dirLightDir[50];
@@ -50,6 +52,7 @@ END RESERVED
 
 in vec3 FragPos;
 in vec3 Norm;
+in vec3 VertColor;
 in vec2 TexCoord;
 
 out vec4 FragColor;
@@ -62,9 +65,17 @@ void main()
     vec3 diffuseBase;
     (textureAssigned == 0) ? (diffuseBase = Kd) : (diffuseBase = vec3(texColor));
 
+    // vertex coloring?
+    (useVertColor == 1) ? (diffuseBase = VertColor) : (diffuseBase = diffuseBase);
+    vec3 ambientBase;
+    (useVertColor == 0) ? (ambientBase = Ka * diffuseBase) : (ambientBase = diffuseBase);
+    vec3 specBase;
+    (useVertColor == 0) ? (specBase = Ks) : (specBase = diffuseBase);
+
 
     vec3 diffuseColor = vec3(0.0,0.0,0.0);
     vec3 specColor = vec3(0.0,0.0,0.0);
+    vec3 ambientColor = vec3(0.0,0.0,0.0);
 
     // directional lighting
     for (int i=0; i<numDirLight; i++)
@@ -83,7 +94,7 @@ void main()
         (dotProd < 1e-10) ? (dotProd = 1e-10) : (dotProd = dotProd);
         float spec = dirLightSpec[i] * pow(dotProd, Ns);
 
-        specColor += I * spec * lightColor * Ks;
+        specColor += I * spec * lightColor * specBase;
     }
 
     // point lighting
@@ -103,7 +114,7 @@ void main()
         (dotProd < 1e-10) ? (dotProd = 1e-10) : (dotProd = dotProd);
         float spec = pointLightSpec[i] * pow(dotProd, Ns);
 
-        specColor += I * spec * lightColor * Ks;
+        specColor += I * spec * lightColor * specBase;
     }
 
     // spot lighting
@@ -130,8 +141,11 @@ void main()
         float spec = spotLightSpec[i] * pow(dotProd, Ns);
         spec *= softLightScale;
 
-        (isLit) ? (specColor += I * spec * lightColor * Ks) : (specColor += 0);
+        (isLit) ? (specColor += I * spec * lightColor * specBase) : (specColor += 0);
     }
+
+    // ambient lighting
+    ambientColor = ambientI * ambientLightColor * ambientBase;
     
-    FragColor = vec4( ambientI * ambientColor * Ka * diffuseBase + specColor + diffuseColor + Ke, 1.0);
+    FragColor = vec4( ambientColor + specColor + diffuseColor + Ke, 1.0);
 } 
