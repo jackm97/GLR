@@ -361,13 +361,25 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
 
         std::sort(axis_vals.data(), axis_vals.data() + axis_vals.size());
         delta = axis_vals[axis_vals.size()/2 - 1];
-        if (axis_vals[axis_vals.size() - 1] == delta)
-            continue;
+        bool split_evenly = false;
+        if (axis_vals[0] == axis_vals[axis_vals.size() - 1])
+            split_evenly = true;
 
         std::vector<tinyobj::index_t*> f_idx_list_l;
         std::vector<tinyobj::index_t*> f_idx_list_r;
         for (int f = 0; f < f_num; f++)
         {
+
+            if (split_evenly)
+            {
+                for (int v = 0; v < 3; v++)
+                    if (f < f_num/2)
+                        f_idx_list_l.push_back(f_idx_list[3*f + v]);
+                    else
+                        f_idx_list_r.push_back(f_idx_list[3*f + v]);
+                continue;
+            }
+            
             glm::vec3 centroid{
                 0,
                 0,
