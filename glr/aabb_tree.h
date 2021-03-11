@@ -16,19 +16,9 @@
 namespace glr
 {
 
-// forward declaration
+// forward declarations
 class OBJ;
-
-struct AABBNode
-{
-    AABBNode *left_ = NULL, *right_ = NULL;
-
-    glm::vec3 extent_{0.0f, 0.0f, 0.0f};
-
-    glm::vec3 center_{0.0f, 0.0f, 0.0f};
-
-    std::vector<tinyobj::index_t*> f_idx_list_; // face index pointers
-};
+struct AABBNode;
 
 class AABBTree
 {
@@ -45,6 +35,8 @@ class AABBTree
         void calcTree();
 
         void clearTree();
+
+        bool intersectTest(AABBTree *other_tree);
 
         void draw();
 
@@ -78,9 +70,30 @@ class AABBTree
 
         void clearTree(AABBNode* node);
 
+        bool intersectTest(AABBNode* A, glm::vec3 axis_A[3], AABBNode* B, glm::vec3 axis_B[3]);
+
+        void clearIntersectTest();
+
         void initGLBuffers();
 
         void initGLBuffers(AABBNode* node);
+};
+
+struct AABBNode
+{
+    AABBTree* tree_ = NULL;
+
+    AABBNode *left_ = NULL, *right_ = NULL;
+
+    glm::vec3 extent_{0.0f, 0.0f, 0.0f};
+
+    glm::vec3 center_{0.0f, 0.0f, 0.0f};
+
+    std::vector<tinyobj::index_t*> f_idx_list_; // face index pointers
+
+    bool is_intersect = false;
+
+    float volume() {return (extent_.x * extent_.y * extent_.z * 2);}
 };
 
 

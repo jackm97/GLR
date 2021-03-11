@@ -173,21 +173,14 @@ GLRENDER_INLINE void sceneViewer::modelMatrix(const glm::mat4 m)
 
 GLRENDER_INLINE void sceneViewer::drawScene()
 {
-	std::vector<glm::mat4> tmp;
-	for (int obj = 0; obj < obj_list_.size(); obj++)
-	{
-		tmp.push_back(obj_list_[obj]->model_matrix_);
-		obj_list_[obj]->model_matrix_ = model_ * obj_list_[obj]->model_matrix_;
-	}
-
 	setUniforms();
 
 	for (int obj = 0; obj < obj_list_.size(); obj++)
-		obj_list_[obj]->draw();
-
-	for (int obj = 0; obj < obj_list_.size(); obj++)
 	{
-		obj_list_[obj]->model_matrix_ = tmp[obj];
+		glm::mat4 tmp = obj_list_[obj]->model_matrix_;
+		obj_list_[obj]->model_matrix_ = model_ * obj_list_[obj]->model_matrix_;
+		obj_list_[obj]->draw();
+		obj_list_[obj]->model_matrix_ = tmp;
 	}
 }
 

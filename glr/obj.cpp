@@ -219,14 +219,35 @@ namespace glr
 		model_matrix_ = mat;
 	}
 
-	GLRENDER_INLINE void OBJ::calcAABB()
+	GLRENDER_INLINE void OBJ::enableAABB(bool use)
 	{
-		aabb_tree_.calcTree();
+		if (use)
+			aabb_tree_.calcTree();
+		else
+			aabb_tree_.clearTree();
+		
+		aabb_tree_enabled_ = use;
 	}
 
 	GLRENDER_INLINE void OBJ::displayAABB(bool use)
 	{
-		display_aabb_tree_ = use;
+		if (use && aabb_tree_enabled_)
+		{
+			display_aabb_tree_ = use;
+			aabb_tree_.initGLBuffers();
+		}
+		else
+			display_aabb_tree_ = false;
+	}
+
+	GLRENDER_INLINE bool OBJ::isIntersect(OBJ* other_obj)
+	{
+		bool is_intersect = this->aabb_tree_.intersectTest( &(other_obj->aabb_tree_) );
+
+		this->displayAABB(this->display_aabb_tree_);
+		other_obj->displayAABB(other_obj->display_aabb_tree_);
+
+		return is_intersect;
 	}
 
 	GLRENDER_INLINE void OBJ::draw()
@@ -482,21 +503,21 @@ namespace glr
 
 		for (int s = 0; s < shapes_.size(); s++)
 		{
-			float x_boundsS[2];
-			float y_boundsS[2];
-			float z_boundsS[2];
+			float x_bounds_shape[2];
+			float y_bounds_shape[2];
+			float z_bounds_shape[2];
 
-			tinyobj::index_t idx_ = shapes_[s].mesh.indices[0];
-			tinyobj::real_t vx_ = attrib_.vertices[3 * idx_.vertex_index + 0];
-			tinyobj::real_t vy_ = attrib_.vertices[3 * idx_.vertex_index + 1];
-			tinyobj::real_t vz_ = attrib_.vertices[3 * idx_.vertex_index + 2];
+			tinyobj::index_t idx = shapes_[s].mesh.indices[0];
+			tinyobj::real_t vx = attrib_.vertices[3 * idx.vertex_index + 0];
+			tinyobj::real_t vy = attrib_.vertices[3 * idx.vertex_index + 1];
+			tinyobj::real_t vz = attrib_.vertices[3 * idx.vertex_index + 2];
 
-			x_boundsS[0] = vx_;
-			x_boundsS[1] = vx_;
-			y_boundsS[0] = vy_;
-			y_boundsS[1] = vy_;
-			z_boundsS[0] = vz_;
-			z_boundsS[1] = vz_;
+			x_bounds_shape[0] = vx;
+			x_bounds_shape[1] = vx;
+			y_bounds_shape[0] = vy;
+			y_bounds_shape[1] = vy;
+			z_bounds_shape[0] = vz;
+			z_bounds_shape[1] = vz;
 
 			// loop over faces
 			size_t index_offset = 0;
@@ -511,23 +532,23 @@ namespace glr
 				for (size_t v = 0; v < 3; v++)
 				{
 					// access to vertex
-					tinyobj::index_t idx = shapes_[s].mesh.indices[index_offset + v];
-					tinyobj::real_t vx = attrib_.vertices[3 * idx.vertex_index + 0];
-					tinyobj::real_t vy = attrib_.vertices[3 * idx.vertex_index + 1];
-					tinyobj::real_t vz = attrib_.vertices[3 * idx.vertex_index + 2];
+					idx = shapes_[s].mesh.indices[index_offset + v];
+					vx = attrib_.vertices[3 * idx.vertex_index + 0];
+					vy = attrib_.vertices[3 * idx.vertex_index + 1];
+					vz = attrib_.vertices[3 * idx.vertex_index + 2];
 
-					if (vx < x_boundsS[0])
-						x_boundsS[0] = vx;
-					if (vx > x_boundsS[1])
-						x_boundsS[1] = vx;
-					if (vy < y_boundsS[0])
-						y_boundsS[0] = vy;
-					if (vy > y_boundsS[1])
-						y_boundsS[1] = vy;
-					if (vz < z_boundsS[0])
-						z_boundsS[0] = vz;
-					if (vz > z_boundsS[1])
-						z_boundsS[1] = vz;
+					if (vx < x_bounds_shape[0])
+						x_bounds_shape[0] = vx;
+					if (vx > x_bounds_shape[1])
+						x_bounds_shape[1] = vx;
+					if (vy < y_bounds_shape[0])
+						y_bounds_shape[0] = vy;
+					if (vy > y_bounds_shape[1])
+						y_bounds_shape[1] = vy;
+					if (vz < z_bounds_shape[0])
+						z_bounds_shape[0] = vz;
+					if (vz > z_bounds_shape[1])
+						z_bounds_shape[1] = vz;
 
 					if (vx < x_bounds[0])
 						x_bounds[0] = vx;
@@ -544,38 +565,88 @@ namespace glr
 				}
 
 				index_offset += 3;
-
-				glm::vec3 shape_center;
-				shape_center.x = (x_boundsS[0] + x_boundsS[1]) / 2;
-				shape_center.y = (y_boundsS[0] + y_boundsS[1]) / 2;
-				shape_center.z = (z_boundsS[0] + z_boundsS[1]) / 2;
-
-				shape_centers_.push_back(shape_center);
-
-				float radius = 0;
-				if ((x_boundsS[1] - x_boundsS[0]) / 2 > radius)
-					radius = (x_boundsS[1] - x_boundsS[0]) / 2;
-				if ((y_boundsS[1] - y_boundsS[0]) / 2 > radius)
-					radius = (y_boundsS[1] - y_boundsS[0]) / 2;
-				if ((z_boundsS[1] - z_boundsS[0]) / 2 > radius)
-					radius = (z_boundsS[1] - z_boundsS[0]) / 2;
-				shape_radii_.push_back(radius);
 			}
+
+			glm::vec3 shape_center;
+			shape_center.x = (x_bounds_shape[0] + x_bounds_shape[1]) / 2;
+			shape_center.y = (y_bounds_shape[0] + y_bounds_shape[1]) / 2;
+			shape_center.z = (z_bounds_shape[0] + z_bounds_shape[1]) / 2;
+
+			shape_centers_.push_back(shape_center);
+
+			index_offset = 0;
+			float radius = 0;
+			for (size_t f = 0; f < shapes_[s].mesh.num_face_vertices.size(); f++)
+			{
+				if (shapes_[s].mesh.num_face_vertices[f] != 3)
+				{
+					index_offset += shapes_[s].mesh.num_face_vertices[f];
+					continue;
+				}
+				// Loop over vertices in the face.
+				for (size_t v = 0; v < 3; v++)
+				{
+					// access to vertex
+					idx = shapes_[s].mesh.indices[index_offset + v];
+					vx = attrib_.vertices[3 * idx.vertex_index + 0];
+					vy = attrib_.vertices[3 * idx.vertex_index + 1];
+					vz = attrib_.vertices[3 * idx.vertex_index + 2];
+				}
+
+				index_offset += 3;
+
+				glm::vec3 v = glm::vec3(vx, vy, vz);
+
+				float tmp = glm::length(v - shape_center);
+				if (tmp > radius)
+					radius = tmp;
+			}
+
+			shape_radii_.push_back(radius);
 		}
 
 		center_.x = (x_bounds[0] + x_bounds[1]) / 2;
 		center_.y = (y_bounds[0] + y_bounds[1]) / 2;
 		center_.z = (z_bounds[0] + z_bounds[1]) / 2;
 
-		float radius = 0;
-		if ((x_bounds[1] - x_bounds[0]) / 2 > radius)
-			radius = (x_bounds[1] - x_bounds[0]) / 2;
-		if ((y_bounds[1] - y_bounds[0]) / 2 > radius)
-			radius = (y_bounds[1] - y_bounds[0]) / 2;
-		if ((z_bounds[1] - z_bounds[0]) / 2 > radius)
-			radius = (z_bounds[1] - z_bounds[0]) / 2;
+		radius_ = 0;
 
-		radius_ = radius;
+		for (int s = 0; s < shapes_.size(); s++)
+		{
+
+			tinyobj::index_t idx;
+			tinyobj::real_t vx;
+			tinyobj::real_t vy;
+			tinyobj::real_t vz;
+
+			// loop over faces
+			size_t index_offset = 0;
+			for (size_t f = 0; f < shapes_[s].mesh.num_face_vertices.size(); f++)
+			{
+				if (shapes_[s].mesh.num_face_vertices[f] != 3)
+				{
+					index_offset += shapes_[s].mesh.num_face_vertices[f];
+					continue;
+				}
+				// Loop over vertices in the face.
+				for (size_t v = 0; v < 3; v++)
+				{
+					// access to vertex
+					idx = shapes_[s].mesh.indices[index_offset + v];
+					vx = attrib_.vertices[3 * idx.vertex_index + 0];
+					vy = attrib_.vertices[3 * idx.vertex_index + 1];
+					vz = attrib_.vertices[3 * idx.vertex_index + 2];
+				}
+
+				index_offset += 3;
+
+				glm::vec3 v = glm::vec3(vx, vy, vz);
+
+				float tmp = glm::length(v - center_);
+				if (tmp > radius_)
+					radius_ = tmp;
+			}
+		}
 	}
 
 } // namespace glr

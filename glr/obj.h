@@ -79,9 +79,11 @@ class OBJ
         void modelMatrix(glm::mat4 mat);
 
         // geometry
-        void calcAABB();
+        void enableAABB(bool use);
 
         void displayAABB(bool use);
+
+        bool isIntersect(OBJ* other_obj);
 
         // draw object
         void draw();
