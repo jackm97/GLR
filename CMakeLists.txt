@@ -22,6 +22,14 @@ if(NOT DEFINED GLM_PATH)
     set(GLM_PATH ${PROJECT_SOURCE_DIR}/extern/glm)
 endif()
 
+# EIGEN PATH:
+#   If adding this as a CMake subdirectory
+#   EIGEN_PATH can instead be set in the top
+#   level CMakeLists.txt
+if(NOT DEFINED EIGEN_PATH)    
+    set(EIGEN_PATH ${PROJECT_SOURCE_DIR}/extern/eigen)
+endif()
+
 # INSTALL PATH:
 #   E.g. if /usr/local will install headers in /usr/local/include/glr
 #   and library in /usr/local/lib/
@@ -35,7 +43,8 @@ set(INSTALL_PATH ${PROJECT_SOURCE_DIR}/install)
 #####################################################################
 
 include_directories(${PROJECT_SOURCE_DIR}/
-                    ${GLM_PATH}/)
+                    ${GLM_PATH}/
+                    ${EIGEN_PATH}/)
 
 set(GLR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/glr)
 
@@ -46,6 +55,7 @@ add_library(glr STATIC ${GLR_SOURCE_DIR}/initialize.cpp
                        ${GLR_SOURCE_DIR}/texture.cpp
                        ${GLR_SOURCE_DIR}/obj.cpp
                        ${GLR_SOURCE_DIR}/aabb_tree.cpp
+                       ${GLR_SOURCE_DIR}/obb_tree.cpp
                        ${GLR_SOURCE_DIR}/renderbase.cpp
                        ${GLR_SOURCE_DIR}/sceneviewer.cpp
                        ${GLR_SOURCE_DIR}/sceneviewer2d.cpp
@@ -57,6 +67,7 @@ set(GLR_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
                 ${GLR_SOURCE_DIR}/texture.h
                 ${GLR_SOURCE_DIR}/obj.h
                 ${GLR_SOURCE_DIR}/aabb_tree.h
+                ${GLR_SOURCE_DIR}/obb_tree.h
                 ${GLR_SOURCE_DIR}/renderbase.h
                 ${GLR_SOURCE_DIR}/sceneviewer.h
                 ${GLR_SOURCE_DIR}/sceneviewer2d.h )

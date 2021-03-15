@@ -6,6 +6,7 @@
 #include <glr/texture.h>
 #include <glr/shader.h>
 #include <glr/aabb_tree.h>
+#include <glr/obb_tree.h>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -35,6 +36,9 @@ class OBJ
 
         glm::vec3 center_; // center of entire obj
         float radius_; // radius of unscaled obj
+
+        AABBTree aabb_tree_;
+        OBBTree obb_tree_;
 
         friend class renderBase;
         friend class sceneViewer;
@@ -83,6 +87,10 @@ class OBJ
 
         void displayAABB(bool use);
 
+        void enableOBB(bool use);
+
+        void displayOBB(bool use);
+
         bool isIntersect(OBJ* other_obj);
 
         // draw object
@@ -117,10 +125,11 @@ class OBJ
 
         bool is_calc_normals_ = false;
         bool is_flip_normals_ = false;
-
-        AABBTree aabb_tree_;
         bool aabb_tree_enabled_ = false;
         bool display_aabb_tree_ = false;
+
+        bool obb_tree_enabled_ = false;
+        bool display_obb_tree_ = false;
 
     private:
 

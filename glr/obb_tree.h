@@ -1,5 +1,5 @@
-#ifndef AABBTREE_H
-#define AABBTREE_H
+#ifndef OBBTREE_H
+#define OBBTREE_H
 #include "glr_inline.h"
 
 #include <glm/glm.hpp>
@@ -18,25 +18,25 @@ namespace glr
 
 // forward declarations
 class OBJ;
-struct AABBNode;
+struct OBBNode;
 
-class AABBTree
+class OBBTree
 {
     public:
-        AABBNode* head_ = NULL;
+        OBBNode* head_ = NULL;
 
         // diagnostics
-        int num_aabb_;
-        int num_primitives_;
-        float total_mem_;
+        int num_obb_ = 0;
+        int num_primitives_ = 0;
+        float total_mem_ = 0;
 
-        int N_v_; // number of volume overlap tests
-        float C_v_; // average time cost of volume overlap test
+        int N_v_ = 0; // number of volume overlap tests
+        float C_v_ = 0; // average time cost of volume overlap test
 
     public:
-        AABBTree() {}
+        OBBTree() {}
 
-        AABBTree(OBJ* obj);
+        OBBTree(OBJ* obj);
 
         void assignObj(OBJ* obj);
         
@@ -44,13 +44,13 @@ class AABBTree
 
         void clearTree();
 
-        bool intersectTest(AABBTree *other_tree);
+        bool intersectTest(OBBTree *other_tree);
 
         void draw();
 
         void glRelease();
 
-        ~AABBTree();
+        ~OBBTree();
 
         friend void initialize();
         friend void cleanup();
@@ -62,9 +62,9 @@ class AABBTree
         OBJ* obj_ptr_ = NULL;
 
         // static AABB shader
-        static std::string aabb_vs_code_;
-        static std::string aabb_fs_code_;
-        static shader aabb_shader_;
+        static std::string obb_vs_code_;
+        static std::string obb_fs_code_;
+        static shader obb_shader_;
 
         std::vector<unsigned int> vao_list_;
         std::vector<unsigned int> vbo_list_;
@@ -72,28 +72,34 @@ class AABBTree
 
     private:
         
-        AABBNode* calcTree(std::vector<tinyobj::index_t*> f_idx_list);
+        OBBNode* calcTree(std::vector<tinyobj::index_t*> f_idx_list);
 
-        void clearTree(AABBNode* node);
+        glm::vec3 calcMean(const std::vector<tinyobj::index_t*>& f_idx_list);
 
-        bool intersectTest(AABBNode* A, glm::vec3 axis_A[3], AABBNode* B, glm::vec3 axis_B[3]);
+        void calcOBBAxes(const std::vector<tinyobj::index_t*>& f_idx_list, glm::vec3 axes[3]);
+
+        void clearTree(OBBNode* node);
+
+        bool intersectTest(OBBNode* A, glm::vec3 axis_A[3], OBBNode* B, glm::vec3 axis_B[3]);
 
         void clearIntersectTest();
 
         void initGLBuffers();
 
-        void initGLBuffers(AABBNode* node);
+        void initGLBuffers(OBBNode* node);
 };
 
-struct AABBNode
+struct OBBNode
 {
-    AABBTree* tree_ = NULL;
+    OBBTree* tree_ = NULL;
 
-    AABBNode *left_ = NULL, *right_ = NULL;
+    OBBNode *left_ = NULL, *right_ = NULL;
 
     glm::vec3 extent_{0.0f, 0.0f, 0.0f};
 
     glm::vec3 center_{0.0f, 0.0f, 0.0f};
+
+    glm::vec3 axes_[3];
 
     std::vector<tinyobj::index_t*> f_idx_list_; // face index pointers
 
@@ -106,7 +112,7 @@ struct AABBNode
 } // namespace glr
 
 #ifndef GLRENDER_STATIC
-#   include <glr/aabb_tree.cpp>
+#   include <glr/obb_tree.cpp>
 #endif
 
 #endif

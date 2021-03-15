@@ -1,6 +1,7 @@
 #include <glr/sceneviewer.h>
 
 #include<glr/aabb_tree.h>
+#include<glr/obb_tree.h>
 
 #ifdef GLRENDER_STATIC
 #   include <glad/glad.h>
@@ -319,6 +320,13 @@ GLRENDER_INLINE void sceneViewer::setUniforms()
 	shader* shader_ptr = &AABBTree::aabb_shader_;
 	shader_ptr->use();
 	int uLocation = glGetUniformLocation(shader_ptr->ID_, "v");
+	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(view_));
+	uLocation = glGetUniformLocation(shader_ptr->ID_, "p");
+	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(proj_));
+
+	shader_ptr = &OBBTree::obb_shader_;
+	shader_ptr->use();
+	uLocation = glGetUniformLocation(shader_ptr->ID_, "v");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(view_));
 	uLocation = glGetUniformLocation(shader_ptr->ID_, "p");
 	glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(proj_));

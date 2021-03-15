@@ -110,6 +110,9 @@ namespace glr
 		aabb_tree_.assignObj(this);
 		if (aabb_tree_enabled_)
 			aabb_tree_.calcTree();
+		obb_tree_.assignObj(this);
+		if (obb_tree_enabled_)
+			obb_tree_.calcTree();
 
 		this->use_vert_colors_.clear();
 		for (int s = 0; s < shapes_.size(); s++)
@@ -222,7 +225,11 @@ namespace glr
 	GLRENDER_INLINE void OBJ::enableAABB(bool use)
 	{
 		if (use)
+		{
+			enableOBB(false);
+			displayOBB(false);
 			aabb_tree_.calcTree();
+		}
 		else
 			aabb_tree_.clearTree();
 		
@@ -240,12 +247,48 @@ namespace glr
 			display_aabb_tree_ = false;
 	}
 
+	GLRENDER_INLINE void OBJ::enableOBB(bool use)
+	{
+		if (use)
+		{
+			enableAABB(false);
+			displayAABB(false);
+			obb_tree_.calcTree();
+		}
+		else
+			obb_tree_.clearTree();
+		
+		obb_tree_enabled_ = use;
+	}
+
+	GLRENDER_INLINE void OBJ::displayOBB(bool use)
+	{
+		if (use && obb_tree_enabled_)
+		{
+			display_obb_tree_ = use;
+			obb_tree_.initGLBuffers();
+		}
+		else
+			display_obb_tree_ = false;
+	}
+
 	GLRENDER_INLINE bool OBJ::isIntersect(OBJ* other_obj)
 	{
-		bool is_intersect = this->aabb_tree_.intersectTest( &(other_obj->aabb_tree_) );
+		bool is_intersect = false;
+		if (aabb_tree_enabled_)
+		{
+			is_intersect = this->aabb_tree_.intersectTest( &(other_obj->aabb_tree_) );
 
-		this->displayAABB(this->display_aabb_tree_);
-		other_obj->displayAABB(other_obj->display_aabb_tree_);
+			this->displayAABB(this->display_aabb_tree_);
+			other_obj->displayAABB(other_obj->display_aabb_tree_);
+		}
+		else if (obb_tree_enabled_)
+		{
+			is_intersect = this->obb_tree_.intersectTest( &(other_obj->obb_tree_) );
+
+			this->displayOBB(this->display_obb_tree_);
+			other_obj->displayOBB(other_obj->display_obb_tree_);
+		}
 
 		return is_intersect;
 	}
@@ -293,6 +336,11 @@ namespace glr
 			AABBTree::aabb_shader_.use();
 			aabb_tree_.draw();
 		}
+		else if (display_obb_tree_)
+		{
+			OBBTree::obb_shader_.use();
+			obb_tree_.draw();
+		}
 	}
 
 	GLRENDER_INLINE void OBJ::glRelease()
@@ -330,10 +378,20 @@ namespace glr
 	
 
 		// model matrix
-		shader* aabb_shader_ptr = &AABBTree::aabb_shader_;
-		aabb_shader_ptr->use();
-		int uLocation = glGetUniformLocation(aabb_shader_ptr->ID_, "m");
-		glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(model_matrix_));
+		if (display_aabb_tree_)
+		{
+			shader* aabb_shader_ptr = &AABBTree::aabb_shader_;
+			aabb_shader_ptr->use();
+			int uLocation = glGetUniformLocation(aabb_shader_ptr->ID_, "m");
+			glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(model_matrix_));
+		}
+		else if (display_obb_tree_)
+		{
+			shader* obb_shader_ptr = &OBBTree::obb_shader_;
+			obb_shader_ptr->use();
+			int uLocation = glGetUniformLocation(obb_shader_ptr->ID_, "m");
+			glUniformMatrix4fv(uLocation, 1, GL_FALSE, glm::value_ptr(model_matrix_));
+		}
 
 		shader_ptr->use();
 	}

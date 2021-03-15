@@ -1,6 +1,7 @@
 #include <glr/initialize.h>
 
 #include <glr/aabb_tree.h>
+#include <glr/obb_tree.h>
 
 #ifdef GLRENDER_STATIC
 #   include <glad/glad.h>
@@ -24,11 +25,13 @@ void initialize()
 #endif
 
     AABBTree::aabb_shader_ = shader(AABBTree::aabb_vs_code_.c_str(), AABBTree::aabb_fs_code_.c_str(), RAW_CODE);
+    OBBTree::obb_shader_ = shader(OBBTree::obb_vs_code_.c_str(), OBBTree::obb_fs_code_.c_str(), RAW_CODE);
 }
 
 void cleanup()
 {
     AABBTree::aabb_shader_.glRelease();
+    OBBTree::obb_shader_.glRelease();
 }
 
 }

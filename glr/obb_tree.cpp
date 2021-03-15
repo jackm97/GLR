@@ -1,4 +1,4 @@
-#include <glr/aabb_tree.h>
+#include <glr/obb_tree.h>
 #include <glr/obj.h>
 
 #ifdef GLRENDER_STATIC
@@ -6,6 +6,8 @@
 #endif
 
 #include <glm/gtx/matrix_decompose.hpp>
+
+#include <Eigen/Eigen>
 
 #include <algorithm>
 #include <stack>
@@ -15,27 +17,27 @@
 namespace glr
 {
 
-std::string AABBTree::aabb_vs_code_(
+std::string OBBTree::obb_vs_code_(
     #include <glr/shaders/aabb.vs.h>
 );
 
-std::string AABBTree::aabb_fs_code_(
+std::string OBBTree::obb_fs_code_(
     #include <glr/shaders/aabb.fs.h>
 );
 
-shader AABBTree::aabb_shader_;
+shader OBBTree::obb_shader_;
 
-GLRENDER_INLINE AABBTree::AABBTree(OBJ* obj)
+GLRENDER_INLINE OBBTree::OBBTree(OBJ* obj)
 {
     assignObj(obj);
 }
 
-GLRENDER_INLINE void AABBTree::assignObj(OBJ* obj)
+GLRENDER_INLINE void OBBTree::assignObj(OBJ* obj)
 {
     this->obj_ptr_ = obj;
 }
 
-GLRENDER_INLINE void AABBTree::calcTree()
+GLRENDER_INLINE void OBBTree::calcTree()
 {
     clearTree();
 
@@ -66,38 +68,38 @@ GLRENDER_INLINE void AABBTree::calcTree()
     initGLBuffers();
 }
 
-GLRENDER_INLINE void AABBTree::clearTree()
+GLRENDER_INLINE void OBBTree::clearTree()
 {
     clearTree(head_);
     glRelease();
     head_ = NULL;
-    num_aabb_ = 0;
+    num_obb_ = 0;
     total_mem_ = 0;
     num_primitives_ = 0;
     N_v_ = 0;
     C_v_ = 0;
 }
 
-GLRENDER_INLINE void AABBTree::draw()
+GLRENDER_INLINE void OBBTree::draw()
 {
-    AABBTree::aabb_shader_.use();
+    OBBTree::obb_shader_.use();
     for (int a = 0; a < vao_list_.size(); a++)
     {
 		// draw
 		glBindVertexArray(vao_list_[a]);
         std::vector<int> starts;
         std::vector<int> num_verts;
-        for (int n = 0; n < 6*num_aabb_; n++)
+        for (int n = 0; n < 6*num_obb_; n++)
         {
             starts.push_back(4 * n);
             num_verts.push_back(4);
         }
-		glMultiDrawArrays(GL_LINE_LOOP, starts.data(), num_verts.data(), 6*num_aabb_);
+		glMultiDrawArrays(GL_LINE_LOOP, starts.data(), num_verts.data(), 6*num_obb_);
 		glBindVertexArray(0);
     }
 }
 
-GLRENDER_INLINE void AABBTree::initGLBuffers()
+GLRENDER_INLINE void OBBTree::initGLBuffers()
 {
     glRelease();
 
@@ -109,13 +111,13 @@ GLRENDER_INLINE void AABBTree::initGLBuffers()
     is_loaded_into_gl_ = true;
 }
 
-GLRENDER_INLINE void AABBTree::initGLBuffers(AABBNode* node)
+GLRENDER_INLINE void OBBTree::initGLBuffers(OBBNode* node)
 {
     if (node==NULL)
         return;
 
 	std::vector<float> vertex_data;
-    vertex_data.reserve(4*3*num_aabb_);
+    vertex_data.reserve(4*3*num_obb_);
     unsigned int VAO;
     unsigned int VBO;
 
@@ -128,7 +130,7 @@ GLRENDER_INLINE void AABBTree::initGLBuffers(AABBNode* node)
 
     glm::vec3 v1, v2, v3, v4;
 
-    std::stack<AABBNode*> node_stack;
+    std::stack<OBBNode*> node_stack;
 
     node_stack.push(node);
 
@@ -155,110 +157,111 @@ GLRENDER_INLINE void AABBTree::initGLBuffers(AABBNode* node)
         if (node->right_ != NULL)
             node_stack.push(node->right_);
 
+        glm::vec3 center = node->center_[0] * node->axes_[0] + node->center_[1] * node->axes_[1] + node->center_[2] * node->axes_[2];
         // top
-        v1 = node->center_ + glm::vec3(0,node->extent_.y,0) + glm::vec3(node->extent_.x, 0, -node->extent_.z);
+        v1 = center + node->extent_.y*node->axes_[1] + node->extent_.x*node->axes_[0] - node->extent_.z*node->axes_[2];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(0,node->extent_.y,0) + glm::vec3(node->extent_.x, 0, node->extent_.z);
+        v2 = center + node->extent_.y*node->axes_[1] + node->extent_.x*node->axes_[0] + node->extent_.z*node->axes_[2];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(0,node->extent_.y,0) + glm::vec3(-node->extent_.x, 0, node->extent_.z);
+        v3 = center + node->extent_.y*node->axes_[1] - node->extent_.x*node->axes_[0] + node->extent_.z*node->axes_[2];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(0,node->extent_.y,0) + glm::vec3(-node->extent_.x, 0, -node->extent_.z);
+        v4 = center + node->extent_.y*node->axes_[1] - node->extent_.x*node->axes_[0] - node->extent_.z*node->axes_[2];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
 
         // bottom
-        v1 = node->center_ + glm::vec3(0,-node->extent_.y,0) + glm::vec3(node->extent_.x, 0, -node->extent_.z);
+        v1 = center - node->extent_.y*node->axes_[1] + node->extent_.x*node->axes_[0] - node->extent_.z*node->axes_[2];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(0,-node->extent_.y,0) + glm::vec3(node->extent_.x, 0, node->extent_.z);
+        v2 = center - node->extent_.y*node->axes_[1] + node->extent_.x*node->axes_[0] + node->extent_.z*node->axes_[2];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(0,-node->extent_.y,0) + glm::vec3(-node->extent_.x, 0, node->extent_.z);
+        v3 = center - node->extent_.y*node->axes_[1] - node->extent_.x*node->axes_[0] + node->extent_.z*node->axes_[2];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(0,-node->extent_.y,0) + glm::vec3(-node->extent_.x, 0, -node->extent_.z);
+        v4 = center - node->extent_.y*node->axes_[1] - node->extent_.x*node->axes_[0] - node->extent_.z*node->axes_[2];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
 
         // front
-        v1 = node->center_ + glm::vec3(0,0,node->extent_.z) + glm::vec3(node->extent_.x, -node->extent_.y, 0);
+        v1 = center + node->extent_.z*node->axes_[2] + node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(0,0,node->extent_.z) + glm::vec3(node->extent_.x, node->extent_.y, 0);
+        v2 = center + node->extent_.z*node->axes_[2] + node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(0,0,node->extent_.z) + glm::vec3(-node->extent_.x, node->extent_.y, 0);
+        v3 = center + node->extent_.z*node->axes_[2] - node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(0,0,node->extent_.z) + glm::vec3(-node->extent_.x, -node->extent_.y, 0);
+        v4 = center + node->extent_.z*node->axes_[2] - node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
 
         // back
-        v1 = node->center_ + glm::vec3(0,0,-node->extent_.z) + glm::vec3(node->extent_.x, -node->extent_.y, 0);
+        v1 = center - node->extent_.z*node->axes_[2] + node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(0,0,-node->extent_.z) + glm::vec3(node->extent_.x, node->extent_.y, 0);
+        v2 = center - node->extent_.z*node->axes_[2] + node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(0,0,-node->extent_.z) + glm::vec3(-node->extent_.x, node->extent_.y, 0);
+        v3 = center - node->extent_.z*node->axes_[2] - node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(0,0,-node->extent_.z) + glm::vec3(-node->extent_.x, -node->extent_.y, 0);
+        v4 = center - node->extent_.z*node->axes_[2] - node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
 
         // left
-        v1 = node->center_ + glm::vec3(-node->extent_.x,0,0) + glm::vec3(0, -node->extent_.y, node->extent_.z);
+        v1 = center - node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1] + node->extent_.z*node->axes_[2];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(-node->extent_.x,0,0) + glm::vec3(0, node->extent_.y, node->extent_.z);
+        v2 = center - node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1] + node->extent_.z*node->axes_[2];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(-node->extent_.x,0,0) + glm::vec3(0, node->extent_.y, -node->extent_.z);
+        v3 = center - node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1] - node->extent_.z*node->axes_[2];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(-node->extent_.x,0,0) + glm::vec3(0, -node->extent_.y, -node->extent_.z);
+        v4 = center - node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1] - node->extent_.z*node->axes_[2];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
 
         // right
-        v1 = node->center_ + glm::vec3(node->extent_.x,0,0) + glm::vec3(0, -node->extent_.y, node->extent_.z);
+        v1 = center + node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1] + node->extent_.z*node->axes_[2];
         v1 *= scale;
         vertex_data.push_back(v1.x); vertex_data.push_back(v1.y); vertex_data.push_back(v1.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v2 = node->center_ + glm::vec3(node->extent_.x,0,0) + glm::vec3(0, node->extent_.y, node->extent_.z);
+        v2 = center + node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1] + node->extent_.z*node->axes_[2];
         v2 *= scale;
         vertex_data.push_back(v2.x); vertex_data.push_back(v2.y); vertex_data.push_back(v2.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v3 = node->center_ + glm::vec3(node->extent_.x,0,0) + glm::vec3(0, node->extent_.y, -node->extent_.z);
+        v3 = center + node->extent_.x*node->axes_[0] + node->extent_.y*node->axes_[1] - node->extent_.z*node->axes_[2];
         v3 *= scale;
         vertex_data.push_back(v3.x); vertex_data.push_back(v3.y); vertex_data.push_back(v3.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
-        v4 = node->center_ + glm::vec3(node->extent_.x,0,0) + glm::vec3(0, -node->extent_.y, -node->extent_.z);
+        v4 = center + node->extent_.x*node->axes_[0] - node->extent_.y*node->axes_[1] - node->extent_.z*node->axes_[2];
         v4 *= scale;
         vertex_data.push_back(v4.x); vertex_data.push_back(v4.y); vertex_data.push_back(v4.z);
         vertex_data.push_back(color.r); vertex_data.push_back(color.g); vertex_data.push_back(color.b);
@@ -275,7 +278,7 @@ GLRENDER_INLINE void AABBTree::initGLBuffers(AABBNode* node)
     // printf("\n");
 }
 
-GLRENDER_INLINE void AABBTree::glRelease()
+GLRENDER_INLINE void OBBTree::glRelease()
 {
 	if (!is_loaded_into_gl_) return;
 
@@ -288,39 +291,45 @@ GLRENDER_INLINE void AABBTree::glRelease()
     is_loaded_into_gl_ = false;
 }
 
-GLRENDER_INLINE AABBTree::~AABBTree()
+GLRENDER_INLINE OBBTree::~OBBTree()
 {
 	glRelease();
     clearTree();
 }
 
-GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_idx_list)
+GLRENDER_INLINE OBBNode* OBBTree::calcTree(std::vector<tinyobj::index_t*> f_idx_list)
 {
     if (f_idx_list.size() == 0)
         return NULL;
 
-    AABBNode* head = new AABBNode;
+    OBBNode* head = new OBBNode;
 
     head->f_idx_list_ = f_idx_list;
 
-    std::stack<AABBNode*> node_stack;
+    std::stack<OBBNode*> node_stack;
 
     node_stack.push(head);
 
-    num_aabb_ = 0;
+    num_obb_ = 0;
     total_mem_ = 0;
     num_primitives_ = f_idx_list.size()/3;
 
+    // std::cout << "\nNumber of faces: " << num_faces << std::endl;
+    bool doOnce = true;
     while (!node_stack.empty())
     {
-        AABBNode* node = node_stack.top();
+        OBBNode* node = node_stack.top();
         node_stack.pop();
-        num_aabb_ += 1;
+        num_obb_ += 1;
         total_mem_ += sizeof(*node);
+        // printf("\rNumber of AABB: %i", num_AABB);
+        // fflush(stdout);
 
         node->tree_ = this;
 
         f_idx_list = node->f_idx_list_;
+
+        calcOBBAxes(f_idx_list, node->axes_);
 
         float minP[3];
         float maxP[3];
@@ -330,7 +339,7 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
         {
             p[i] = obj_ptr_->attrib_.vertices[3 * f_idx_list[0]->vertex_index + i];
         }
-        // p = glm::vec3(obj_ptr_->modelMatrix() * glm::vec4(p, 1.0f));
+        p = glm::vec3(glm::dot(node->axes_[0],p),glm::dot(node->axes_[1],p),glm::dot(node->axes_[2],p));
         for (int i = 0; i < 3; i++)
         {
             minP[i] = p[i];
@@ -346,7 +355,7 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
                 {
                     p[i] = obj_ptr_->attrib_.vertices[3 * f_idx_list[3*f + v]->vertex_index + i];
                 }
-                // p = glm::vec3(obj_ptr_->modelMatrix() * glm::vec4(p, 1.0f));
+                p = glm::vec3(glm::dot(node->axes_[0],p),glm::dot(node->axes_[1],p),glm::dot(node->axes_[2],p));
                 for (int i = 0; i < 3; i++)
                 {
                     float v_i = p[i];
@@ -409,7 +418,7 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
                     obj_ptr_->attrib_.vertices[3 * f_idx_list[3*f + v]->vertex_index + 2]
                 };
 
-                // tmp = glm::vec3(obj_ptr_->modelMatrix() * glm::vec4(tmp, 1.0f));
+                tmp = glm::vec3(glm::dot(node->axes_[0],tmp),glm::dot(node->axes_[1],tmp),glm::dot(node->axes_[2],tmp));
 
                 centroid += tmp;
             }
@@ -473,7 +482,7 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
                     obj_ptr_->attrib_.vertices[3 * f_idx_list[3*f + v]->vertex_index + 2]
                 };
 
-                // tmp = glm::vec3(obj_ptr_->modelMatrix() * glm::vec4(tmp, 1.0f));
+                tmp = glm::vec3(glm::dot(node->axes_[0],tmp),glm::dot(node->axes_[1],tmp),glm::dot(node->axes_[2],tmp));
 
                 centroid += tmp;
             }
@@ -512,22 +521,118 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
 
         if (f_idx_list_l.size() != 0)
         {
-            node->left_ = new AABBNode;
+            node->left_ = new OBBNode;
             node->left_->f_idx_list_ = f_idx_list_l;
             node_stack.push(node->left_);
         }
         if (f_idx_list_r.size() != 0)
         {
-            node->right_ = new AABBNode;
+            node->right_ = new OBBNode;
             node->right_->f_idx_list_ = f_idx_list_r;
             node_stack.push(node->right_);
         }
     }
+    // std::cout << "\nTotal memory of AABB Tree: " << total_mem/1e6 << std::endl;
 
     return head;
 }
 
-GLRENDER_INLINE void AABBTree::clearTree(AABBNode* node)
+GLRENDER_INLINE glm::vec3 OBBTree::calcMean(const std::vector<tinyobj::index_t*>& f_idx_list)
+{
+    int n = f_idx_list.size()/3;
+
+    glm::vec3 mu(0);
+
+    for (int i = 0; i < n; i++)
+    {
+        glm::vec3 p;
+        for (int v = 0; v < 3; v++)
+        {
+            p[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 0]->vertex_index + v];
+        }
+        glm::vec3 q;
+        for (int v = 0; v < 3; v++)
+        {
+            q[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 1]->vertex_index + v];
+        }
+        glm::vec3 r;
+        for (int v = 0; v < 3; v++)
+        {
+            r[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 2]->vertex_index + v];
+        }
+
+        float m = glm::length(glm::cross(q-p,r-p))/2;
+
+        if (m != 0)
+            mu += 1/m * (p + q + r);
+    }
+
+    mu = 1.f/(6.f * n) * mu;
+
+    return mu;
+}
+
+GLRENDER_INLINE void OBBTree::calcOBBAxes(const std::vector<tinyobj::index_t*>& f_idx_list, glm::vec3 axes[3])
+{
+    glm::vec3 mu_glm = calcMean(f_idx_list);
+
+    Eigen::Vector3f mu(glm::value_ptr(mu_glm));
+    Eigen::Matrix3f C = Eigen::Matrix3f::Zero();
+
+
+    int n = f_idx_list.size()/3;
+
+    for (int i = 0; i < n; i++)
+    {
+        Eigen::Vector3f p;
+        for (int v = 0; v < 3; v++)
+        {
+            p[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 0]->vertex_index + v];
+        }
+        Eigen::Vector3f q;
+        for (int v = 0; v < 3; v++)
+        {
+            q[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 1]->vertex_index + v];
+        }
+        Eigen::Vector3f r;
+        for (int v = 0; v < 3; v++)
+        {
+            r[v] = this->obj_ptr_->attrib_.vertices[3 * f_idx_list[3*i + 2]->vertex_index + v];
+        }
+
+
+        float m = (q - p).cross(r - p).norm()/2;
+
+        p = p.array() - mu.array();
+        q = q.array() - mu.array();
+        r = r.array() - mu.array();
+
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                C(j,k) += 1.f/(24.f * n) * m * ( (p[j] + q[j] + r[j])*(p[k] + q[k] + r[k]) + p[j]*p[k] +q[j]*q[k] + r[j]*r[k] );
+            }
+        }
+    }
+
+    Eigen::Matrix3cf eigen_vecs;
+    Eigen::EigenSolver<Eigen::Matrix3f> solver(C);
+    eigen_vecs = solver.eigenvectors();
+    
+
+    for (int k = 0; k < 3; k++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            axes[k][j] = eigen_vecs(j,k).real();
+        }
+
+        axes[k] = glm::normalize(axes[k]);
+    }
+}
+
+GLRENDER_INLINE void OBBTree::clearTree(OBBNode* node)
 {
     if (node == NULL)
         return;
@@ -538,14 +643,14 @@ GLRENDER_INLINE void AABBTree::clearTree(AABBNode* node)
     delete node;
 };
 
-GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
+GLRENDER_INLINE bool OBBTree::intersectTest(OBBTree* other_tree)
 {
 
     this->clearIntersectTest();
     other_tree->clearIntersectTest();
 
-    std::stack<AABBNode*> node_stack;
-    std::stack<glm::vec3*> axes_stack;
+    std::stack<OBBNode*> node_stack;
+    std::stack<glm::quat*> rot_stack;
 
     node_stack.push(this->head_);
     node_stack.push(other_tree->head_);
@@ -558,11 +663,7 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
     glm::vec3 skew_A;
     glm::vec4 persp_A;
     glm::decompose(this->obj_ptr_->modelMatrix(), scale_A, rot_A, trans_A, skew_A, persp_A);
-    glm::vec3 A1 = rot_A * glm::vec3(1, 0, 0);
-    glm::vec3 A2 = rot_A * glm::vec3(0, 1, 0);
-    glm::vec3 A3 = rot_A * glm::vec3(0, 0, 1);
-    glm::vec3 axes_this[3] {A1, A2, A3};
-    axes_stack.push(axes_this);
+    rot_stack.push(&rot_A);
 
     glm::vec3 scale_B;
     glm::quat rot_B;
@@ -570,26 +671,32 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
     glm::vec3 skew_B;
     glm::vec4 persp_B;
     glm::decompose(other_tree->obj_ptr_->modelMatrix(), scale_B, rot_B, trans_B, skew_B, persp_B);
-    glm::vec3 B1 = rot_B * glm::vec3(1, 0, 0);
-    glm::vec3 B2 = rot_B * glm::vec3(0, 1, 0);
-    glm::vec3 B3 = rot_B * glm::vec3(0, 0, 1);
-    glm::vec3 axes_other[3] {B1, B2, B3};
-    axes_stack.push(axes_other);
+    rot_stack.push(&rot_B);
 
     N_v_ = 0;
     C_v_ = 0;
 
     while (!node_stack.empty())
     {
-        AABBNode* A = node_stack.top();
+        OBBNode* A = node_stack.top();
         node_stack.pop();
-        glm::vec3* axis_A = axes_stack.top();
-        axes_stack.pop();
+        glm::vec3 axis_A[3];
+        for (int i = 0; i < 3; i++)
+            axis_A[i] = A->axes_[i];
+        glm::quat* A_rot_ptr = rot_stack.top();
+        rot_stack.pop();
+        for (int i = 0; i < 3; i++)
+            axis_A[i] = (*A_rot_ptr) * axis_A[i];
 
-        AABBNode* B = node_stack.top();
+        OBBNode* B = node_stack.top();
         node_stack.pop();
-        glm::vec3* axis_B = axes_stack.top();
-        axes_stack.pop();
+        glm::vec3 axis_B[3];
+        for (int i = 0; i < 3; i++)
+            axis_B[i] = B->axes_[i];
+        glm::quat* B_rot_ptr = rot_stack.top();
+        rot_stack.pop();
+        for (int i = 0; i < 3; i++)
+            axis_B[i] = (*B_rot_ptr) * axis_B[i];
         
         if (A == NULL || B == NULL)
             continue;
@@ -622,17 +729,17 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
                 if (A->left_ != NULL)
                 {
                     node_stack.push(B);
-                    axes_stack.push(axis_B);
+                    rot_stack.push(B_rot_ptr);
                     node_stack.push(A->left_);
-                    axes_stack.push(axis_A);
+                    rot_stack.push(A_rot_ptr);
                 }
 
                 if (A->right_ != NULL)
                 {
                     node_stack.push(B);
-                    axes_stack.push(axis_B);
+                    rot_stack.push(B_rot_ptr);
                     node_stack.push(A->right_);
-                    axes_stack.push(axis_A);
+                    rot_stack.push(A_rot_ptr);
                 }
             }
             else
@@ -640,17 +747,17 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
                 if (B->left_ != NULL)
                 {
                     node_stack.push(A);
-                    axes_stack.push(axis_A);
+                    rot_stack.push(A_rot_ptr);
                     node_stack.push(B->left_);
-                    axes_stack.push(axis_B);
+                    rot_stack.push(B_rot_ptr);
                 }
 
                 if (B->right_ != NULL)
                 {
                     node_stack.push(A);
-                    axes_stack.push(axis_A);
+                    rot_stack.push(A_rot_ptr);
                     node_stack.push(B->right_);
-                    axes_stack.push(axis_B);
+                    rot_stack.push(B_rot_ptr);
                 }
             }
         }
@@ -665,7 +772,7 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
 }
 
 //doesn't support scaled matrix yet
-GLRENDER_INLINE bool AABBTree::intersectTest(AABBNode* A, glm::vec3 axis_A[3], AABBNode* B, glm::vec3 axis_B[3])
+GLRENDER_INLINE bool OBBTree::intersectTest(OBBNode* A, glm::vec3 axis_A[3], OBBNode* B, glm::vec3 axis_B[3])
 {
 
     glm::vec3 L; // separating axis
@@ -683,7 +790,10 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBNode* A, glm::vec3 axis_A[3], A
         r_B += std::abs( glm::dot(B->extent_.y * axis_B[1], L) );
         r_B += std::abs( glm::dot(B->extent_.z * axis_B[2], L) );
 
-        glm::vec3 T = glm::vec3(B->tree_->obj_ptr_->modelMatrix() * glm::vec4(B->center_,1)) - glm::vec3(A->tree_->obj_ptr_->modelMatrix() * glm::vec4(A->center_,1));
+        glm::vec3 A_center = A->center_[0] * A->axes_[0] + A->center_[1] * A->axes_[1] + A->center_[2] * A->axes_[2];
+        glm::vec3 B_center = B->center_[0] * B->axes_[0] + B->center_[1] * B->axes_[1] + B->center_[2] * B->axes_[2];
+
+        glm::vec3 T = glm::vec3(B->tree_->obj_ptr_->modelMatrix() * glm::vec4(B_center,1)) - glm::vec3(A->tree_->obj_ptr_->modelMatrix() * glm::vec4(A_center,1));
 
         if ( std::abs(glm::dot(T, L)) > (r_A + r_B) )
             return false;
@@ -698,8 +808,6 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBNode* A, glm::vec3 axis_A[3], A
         r_B = std::abs( glm::dot(B->extent_.x * axis_B[0], L) );
         r_B += std::abs( glm::dot(B->extent_.y * axis_B[1], L) );
         r_B += std::abs( glm::dot(B->extent_.z * axis_B[2], L) );
-
-        T = glm::vec3(B->tree_->obj_ptr_->modelMatrix() * glm::vec4(B->center_,1)) - glm::vec3(A->tree_->obj_ptr_->modelMatrix() * glm::vec4(A->center_,1));
 
         if ( std::abs(glm::dot(T, L)) > (r_A + r_B) )
             return false;
@@ -722,7 +830,10 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBNode* A, glm::vec3 axis_A[3], A
             r_B += std::abs( glm::dot(B->extent_.y * axis_B[1], L) );
             r_B += std::abs( glm::dot(B->extent_.z * axis_B[2], L) );
 
-            glm::vec3 T = glm::vec3(B->tree_->obj_ptr_->modelMatrix() * glm::vec4(B->center_,1)) - glm::vec3(A->tree_->obj_ptr_->modelMatrix() * glm::vec4(A->center_,1));
+            glm::vec3 A_center = A->center_[0] * A->axes_[0] + A->center_[1] * A->axes_[1] + A->center_[2] * A->axes_[2];
+            glm::vec3 B_center = B->center_[0] * B->axes_[0] + B->center_[1] * B->axes_[1] + B->center_[2] * B->axes_[2];
+
+            glm::vec3 T = glm::vec3(B->tree_->obj_ptr_->modelMatrix() * glm::vec4(B_center,1)) - glm::vec3(A->tree_->obj_ptr_->modelMatrix() * glm::vec4(A_center,1));
 
             if ( std::abs(glm::dot(T, L)) > (r_A + r_B) )
                 return false;
@@ -732,14 +843,14 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBNode* A, glm::vec3 axis_A[3], A
     return true;    
 }
 
-GLRENDER_INLINE void AABBTree::clearIntersectTest()
+GLRENDER_INLINE void OBBTree::clearIntersectTest()
 {
-    std::stack<AABBNode*> node_stack;
+    std::stack<OBBNode*> node_stack;
     node_stack.push(head_);
 
     while (!node_stack.empty())
     {
-        AABBNode* node = node_stack.top();
+        OBBNode* node = node_stack.top();
         node_stack.pop();
 
         if (node == NULL)
