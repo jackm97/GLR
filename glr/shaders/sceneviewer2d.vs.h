@@ -26,14 +26,15 @@ out vec2 TexCoord;\n \
 void main()\n \
 {\n \
 	gl_Position = vec4(inPos, 1.0);\n \
-\n \
+	\n \
 	bool isBackgroundBool = (isBackground == 1);\n \
 	(!isBackgroundBool) ? (gl_Position.x -= boundX/2) : (gl_Position.x = gl_Position.x);\n \
 	(!isBackgroundBool) ? (gl_Position.y -= boundY/2) : (gl_Position.y = gl_Position.y);\n \
 	(!isBackgroundBool) ? (gl_Position.x /= (boundX/2)) : (gl_Position.x = gl_Position.x);\n \
 	(!isBackgroundBool) ? (gl_Position.y /= (boundY/2)) : (gl_Position.y = gl_Position.y);\n \
 	(!isBackgroundBool) ? (gl_Position.z = 0) : (gl_Position.z = gl_Position.z);\n \
-\n \
+	\n \
 	gl_Position = m * gl_Position;\n \
 	TexCoord = vec2(inUV.x, inUV.y);\n \
-}"
+}\n \
+"

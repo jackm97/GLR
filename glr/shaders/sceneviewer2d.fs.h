@@ -29,4 +29,5 @@ void main()\n \
     vec3 diffuseBase;\n \
     (textureAssigned == 0) ? (diffuseBase = Kd) : (diffuseBase = vec3(texColor));\n \
 	FragColor = vec4(diffuseBase,1);\n \
-}"
+}\n \
+"
