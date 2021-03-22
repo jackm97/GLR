@@ -78,6 +78,7 @@ GLRENDER_INLINE void OBBTree::clearTree()
     num_primitives_ = 0;
     N_v_ = 0;
     C_v_ = 0;
+    num_leaf_overlap_ = 0;
 }
 
 GLRENDER_INLINE void OBBTree::draw()
@@ -304,11 +305,11 @@ GLRENDER_INLINE OBBNode* OBBTree::calcTree(std::vector<tinyobj::index_t*> f_idx_
 
     OBBNode* head = new OBBNode;
 
-    head->f_idx_list_ = f_idx_list;
-
     std::stack<OBBNode*> node_stack;
+    std::stack<std::vector<tinyobj::index_t*>> f_idx_list_stack;
 
     node_stack.push(head);
+    f_idx_list_stack.push(f_idx_list);
 
     num_obb_ = 0;
     total_mem_ = 0;
@@ -327,7 +328,8 @@ GLRENDER_INLINE OBBNode* OBBTree::calcTree(std::vector<tinyobj::index_t*> f_idx_
 
         node->tree_ = this;
 
-        f_idx_list = node->f_idx_list_;
+        f_idx_list = f_idx_list_stack.top();
+        f_idx_list_stack.pop();
 
         calcOBBAxes(f_idx_list, node->axes_);
 
@@ -522,13 +524,13 @@ GLRENDER_INLINE OBBNode* OBBTree::calcTree(std::vector<tinyobj::index_t*> f_idx_
         if (f_idx_list_l.size() != 0)
         {
             node->left_ = new OBBNode;
-            node->left_->f_idx_list_ = f_idx_list_l;
+            f_idx_list_stack.push(f_idx_list_l);
             node_stack.push(node->left_);
         }
         if (f_idx_list_r.size() != 0)
         {
             node->right_ = new OBBNode;
-            node->right_->f_idx_list_ = f_idx_list_r;
+            f_idx_list_stack.push(f_idx_list_r);
             node_stack.push(node->right_);
         }
     }
@@ -675,6 +677,7 @@ GLRENDER_INLINE bool OBBTree::intersectTest(OBBTree* other_tree)
 
     N_v_ = 0;
     C_v_ = 0;
+    num_leaf_overlap_ = 0;
 
     while (!node_stack.empty())
     {
@@ -722,6 +725,7 @@ GLRENDER_INLINE bool OBBTree::intersectTest(OBBTree* other_tree)
                 A->is_intersect = true;
                 B->is_intersect = true;
                 is_intersect = true;
+                num_leaf_overlap_ += 1;
             }
 
             if ( (A->left_ != NULL || A->right_ != NULL) && ( A->volume() > B->volume() || (B->left_ == NULL && B->right_ == NULL) ) )
@@ -767,6 +771,7 @@ GLRENDER_INLINE bool OBBTree::intersectTest(OBBTree* other_tree)
 
     other_tree->N_v_ = this->N_v_;
     other_tree->C_v_ = this->C_v_;
+    other_tree->num_leaf_overlap_ = this->num_leaf_overlap_;
     
     return is_intersect;
 }

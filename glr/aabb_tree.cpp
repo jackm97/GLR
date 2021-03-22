@@ -76,6 +76,7 @@ GLRENDER_INLINE void AABBTree::clearTree()
     num_primitives_ = 0;
     N_v_ = 0;
     C_v_ = 0;
+    num_leaf_overlap_ = 0;
 }
 
 GLRENDER_INLINE void AABBTree::draw()
@@ -301,11 +302,11 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
 
     AABBNode* head = new AABBNode;
 
-    head->f_idx_list_ = f_idx_list;
-
     std::stack<AABBNode*> node_stack;
+    std::stack<std::vector<tinyobj::index_t*>> f_idx_list_stack;
 
     node_stack.push(head);
+    f_idx_list_stack.push(f_idx_list);
 
     num_aabb_ = 0;
     total_mem_ = 0;
@@ -320,7 +321,8 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
 
         node->tree_ = this;
 
-        f_idx_list = node->f_idx_list_;
+        f_idx_list = f_idx_list_stack.top();
+        f_idx_list_stack.pop();
 
         float minP[3];
         float maxP[3];
@@ -513,13 +515,13 @@ GLRENDER_INLINE AABBNode* AABBTree::calcTree(std::vector<tinyobj::index_t*> f_id
         if (f_idx_list_l.size() != 0)
         {
             node->left_ = new AABBNode;
-            node->left_->f_idx_list_ = f_idx_list_l;
+            f_idx_list_stack.push(f_idx_list_l);
             node_stack.push(node->left_);
         }
         if (f_idx_list_r.size() != 0)
         {
             node->right_ = new AABBNode;
-            node->right_->f_idx_list_ = f_idx_list_r;
+            f_idx_list_stack.push(f_idx_list_r);
             node_stack.push(node->right_);
         }
     }
@@ -578,6 +580,7 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
 
     N_v_ = 0;
     C_v_ = 0;
+    num_leaf_overlap_ = 0;
 
     while (!node_stack.empty())
     {
@@ -615,6 +618,7 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
                 A->is_intersect = true;
                 B->is_intersect = true;
                 is_intersect = true;
+                num_leaf_overlap_ += 1;
             }
 
             if ( (A->left_ != NULL || A->right_ != NULL) && ( A->volume() > B->volume() || (B->left_ == NULL && B->right_ == NULL) ) )
@@ -660,6 +664,7 @@ GLRENDER_INLINE bool AABBTree::intersectTest(AABBTree* other_tree)
 
     other_tree->N_v_ = this->N_v_;
     other_tree->C_v_ = this->C_v_;
+    other_tree->num_leaf_overlap_ = this->num_leaf_overlap_;
     
     return is_intersect;
 }

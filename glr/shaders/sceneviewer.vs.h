@@ -38,6 +38,7 @@ void main()\n \
 \n \
   FragPos = vec3(m * vec4(inPos, 1.0));\n \
   Norm = mat3(m) * inNorm;\n \
+  Norm = normalize(Norm);\n \
   VertColor = inVertColor;\n \
   TexCoord = inUV;\n \
 }\n \

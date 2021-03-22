@@ -32,6 +32,7 @@ class AABBTree
 
         int N_v_; // number of volume overlap tests
         float C_v_; // average time cost of volume overlap test
+        int num_leaf_overlap_ = 0; // number of leaf volumes that overlap
 
     public:
         AABBTree() {}
@@ -94,8 +95,6 @@ struct AABBNode
     glm::vec3 extent_{0.0f, 0.0f, 0.0f};
 
     glm::vec3 center_{0.0f, 0.0f, 0.0f};
-
-    std::vector<tinyobj::index_t*> f_idx_list_; // face index pointers
 
     bool is_intersect = false;
 
