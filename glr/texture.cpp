@@ -84,7 +84,6 @@ GLRENDER_INLINE void texture::genNewTexture()
 
 GLRENDER_INLINE void texture::genNewTexture(int m, int n)
 {
-    glDeleteTextures(1, (GLuint*) &ID_);
     texture new_texture(m, n, this->name_);
 
     *this = new_texture;
