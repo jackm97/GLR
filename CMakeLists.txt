@@ -11,7 +11,6 @@ project(jfs VERSION 0.1.0)
 # set(GLAD_SRC_NAME glad.c) 
 if(NOT DEFINED GLAD_PATH)   
     set(GLAD_PATH ${PROJECT_SOURCE_DIR}/extern/glad)
-    include_directories(${GLAD_PATH}/include)
 endif()
 
 # GLM PATH:
@@ -30,19 +29,11 @@ if(NOT DEFINED EIGEN_PATH)
     set(EIGEN_PATH ${PROJECT_SOURCE_DIR}/extern/eigen)
 endif()
 
-# INSTALL PATH:
-#   E.g. if /usr/local will install headers in /usr/local/include/glr
-#   and library in /usr/local/lib/
-#
-#   Note that CMake doesn't have an uninstall feature
-#   To uninstall, manual removal of the files is necessary
-    
-set(INSTALL_PATH ${PROJECT_SOURCE_DIR}/install)
-
 # END CUSTOM OPTIONS
 #####################################################################
 
 include_directories(${PROJECT_SOURCE_DIR}/
+                    ${GLAD_PATH}/include
                     ${GLM_PATH}/
                     ${EIGEN_PATH}/)
 
@@ -58,8 +49,7 @@ add_library(glr STATIC ${GLR_SOURCE_DIR}/initialize.cpp
                        ${GLR_SOURCE_DIR}/obb_tree.cpp
                        ${GLR_SOURCE_DIR}/renderbase.cpp
                        ${GLR_SOURCE_DIR}/sceneviewer.cpp
-                       ${GLR_SOURCE_DIR}/sceneviewer2d.cpp
-                       ${GLAD_PATH}/src/${GLAD_SRC_NAME} )
+                       ${GLR_SOURCE_DIR}/sceneviewer2d.cpp)
 
 set(GLR_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
                 ${GLR_SOURCE_DIR}/initialize.h
@@ -71,6 +61,3 @@ set(GLR_HEADERS ${GLR_SOURCE_DIR}/static_build/glr_inline.h
                 ${GLR_SOURCE_DIR}/renderbase.h
                 ${GLR_SOURCE_DIR}/sceneviewer.h
                 ${GLR_SOURCE_DIR}/sceneviewer2d.h )
-
-install(TARGETS glr DESTINATION ${INSTALL_PATH}/lib/glr)
-install(FILES ${GLR_HEADERS} DESTINATION ${INSTALL_PATH}/include/glr)
