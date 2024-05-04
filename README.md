@@ -3,6 +3,8 @@ GLRenders: c++ library of various OpenGL rendering stuff I use in my projects.
 
 It used to have header-only functionality but it's too difficult to maintain. There are two main ways of using the library. Building it and linking it manually or including at as a subdirectory in a cmake file.
 
+![neon car gif](neon_car.gif)
+
 ## Dependencies
 All the dependencies are included as git submodules in the `extern` folder of this repository. If you're project already includes these dependencies you will need to change their locations in the [CMakeLists.txt](./CMakeLists.txt).
 
